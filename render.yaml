@@ -4,6 +4,7 @@ services:
     name: wednesday-spotify-rater
     runtime: node
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /
