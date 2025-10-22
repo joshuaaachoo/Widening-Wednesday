@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wednesday Spotify Rater</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .song-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .song-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1DB954, #1ed760);
+        }
+
+        .song-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .song-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin-right: 15px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .song-details h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .song-details h3 a {
+            color: #1DB954;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .song-details h3 a:hover {
+            color: #1ed760;
+            text-decoration: underline;
+        }
+
+        .song-details p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .rating-section {
+            margin-bottom: 20px;
+        }
+
+        .rating-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rating-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rating-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .rating-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .rating-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1DB954;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .review-section {
+            margin-bottom: 20px;
+        }
+
+        .review-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s ease;
+        }
+
+        .review-textarea:focus {
+            outline: none;
+            border-color: #1DB954;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1DB954, #1ed760);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        .user-rating-info {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #c8e6c9;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .user-rating-info i {
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .songs-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .song-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-music"></i> Wednesday Spotify Rater</h1>
+            <p>Rate the songs shared in Discord every Wednesday!</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <div>Loading songs...</div>
+        </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <i class="fas fa-music"></i>
+            <h3>No songs to rate yet</h3>
+            <p>Check back on Wednesday when new songs are shared!</p>
+        </div>
+
+        <div id="songs-container" class="songs-grid" style="display: none;">
+            <!-- Songs will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        class SpotifyRater {
+            constructor() {
+                this.songs = [];
+                this.userId = this.generateUserId();
+                this.init();
+            }
+
+            generateUserId() {
+                let userId = localStorage.getItem('spotify_rater_user_id');
+                if (!userId) {
+                    userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('spotify_rater_user_id', userId);
+                }
+                return userId;
+            }
+
+            async init() {
+                await this.loadSongs();
+                this.setupAutoRefresh();
+            }
+
+            async loadSongs() {
+                try {
+                    const response = await fetch('/api/songs');
+                    this.songs = await response.json();
+                    this.renderSongs();
+                } catch (error) {
+                    console.error('Error loading songs:', error);
+                    this.showError('Failed to load songs. Please refresh the page.');
+                }
+            }
+
+            async renderSongs() {
+                const loadingEl = document.getElementById('loading');
+                const emptyStateEl = document.getElementById('empty-state');
+                const songsContainerEl = document.getElementById('songs-container');
+
+                loadingEl.style.display = 'none';
+
+                if (this.songs.length === 0) {
+                    emptyStateEl.style.display = 'block';
+                    songsContainerEl.style.display = 'none';
+                    return;
+                }
+
+                emptyStateEl.style.display = 'none';
+                songsContainerEl.style.display = 'grid';
+
+                songsContainerEl.innerHTML = this.songs.map(song => this.createSongCard(song)).join('');
+                
+                // Check if user has rated each song
+                for (const song of this.songs) {
+                    await this.checkUserRating(song.id);
+                }
+            }
+
+            createSongCard(song) {
+                const avgRating = song.avg_rating ? parseFloat(song.avg_rating).toFixed(1) : 'N/A';
+                const ratingCount = song.rating_count || 0;
+
+                return `
+                    <div class="song-card" data-song-id="${song.id}">
+                        <div class="song-info">
+                            ${song.image_url ? `<img src="${song.image_url}" alt="${song.title}" class="song-image">` : '<div class="song-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-music" style="color: #ccc; font-size: 2rem;"></i></div>'}
+                        <div class="song-details">
+                            <h3><a href="${song.spotify_url}" target="_blank">${song.title || 'Unknown Title'}</a></h3>
+                            <p>${song.artist || 'Unknown Artist'}</p>
+                        </div>
+                        </div>
+
+                        <div class="rating-section">
+                            <label class="rating-label">Rate this song (1-10):</label>
+                            <div class="rating-input">
+                                <input type="range" 
+                                       class="rating-slider" 
+                                       min="1" 
+                                       max="10" 
+                                       value="5" 
+                                       data-song-id="${song.id}"
+                                       oninput="this.nextElementSibling.textContent = this.value">
+                                <span class="rating-value">5</span>
+                            </div>
+                        </div>
+
+                        <div class="review-section">
+                            <label class="rating-label">Optional Review:</label>
+                            <textarea class="review-textarea" 
+                                      placeholder="Share your thoughts about this song..." 
+                                      data-song-id="${song.id}"></textarea>
+                        </div>
+
+                        <button class="submit-btn" onclick="rater.submitRating(${song.id})">
+                            <i class="fas fa-star"></i> Submit Rating
+                        </button>
+
+                        <div class="stats">
+                            <span><i class="fas fa-star"></i> Avg: ${avgRating}</span>
+                            <span><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</span>
+                        </div>
+
+                        <div class="success-message" id="success-${song.id}">
+                            <i class="fas fa-check-circle"></i> Rating submitted successfully!
+                        </div>
+
+                        <div class="error-message" id="error-${song.id}">
+                            <i class="fas fa-exclamation-circle"></i> <span class="error-text"></span>
+                        </div>
+
+                        <div class="user-rating-info" id="user-rating-${song.id}">
+                            <i class="fas fa-check-circle"></i> <span class="rating-text"></span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async submitRating(songId) {
+                const card = document.querySelector(`[data-song-id="${songId}"]`);
+                const ratingSlider = card.querySelector('.rating-slider');
+                const reviewTextarea = card.querySelector('.review-textarea');
+                const submitBtn = card.querySelector('.submit-btn');
+                const successMsg = card.querySelector('.success-message');
+                const errorMsg = card.querySelector('.error-message');
+
+                const rating = parseInt(ratingSlider.value);
+                const review = reviewTextarea.value.trim();
+
+                // Disable button and show loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                this.hideMessages(songId);
+
+                try {
+                    const response = await fetch(`/api/songs/${songId}/rate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            user_id: this.userId,
+                            rating: rating,
+                            review: review || null
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        successMsg.innerHTML = `<i class="fas fa-check-circle"></i> Rating ${result.updated ? 'updated' : 'submitted'} successfully!`;
+                        successMsg.style.display = 'block';
+                        // Clear form
+                        ratingSlider.value = 5;
+                        ratingSlider.nextElementSibling.textContent = '5';
+                        reviewTextarea.value = '';
+                        // Update user rating info
+                        await this.checkUserRating(songId);
+                        // Reload songs to update stats
+                        setTimeout(() => this.loadSongs(), 1000);
+                    } else {
+                        const errorData = await response.json();
+                        this.showError(songId, errorData.error || 'Failed to submit rating');
+                    }
+                } catch (error) {
+                    console.error('Error submitting rating:', error);
+                    this.showError(songId, 'Network error. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-star"></i> Submit Rating';
+                }
+            }
+
+            showError(songId, message) {
+                const errorMsg = document.getElementById(`error-${songId}`);
+                const errorText = errorMsg.querySelector('.error-text');
+                errorText.textContent = message;
+                errorMsg.style.display = 'block';
+            }
+
+            hideMessages(songId) {
+                const successMsg = document.getElementById(`success-${songId}`);
+                const errorMsg = document.getElementById(`error-${songId}`);
+                successMsg.style.display = 'none';
+                errorMsg.style.display = 'none';
+            }
+
+            async checkUserRating(songId) {
+                try {
+                    const response = await fetch(`/api/songs/${songId}/ratings`);
+                    const ratings = await response.json();
+                    
+                    // Find if current user has rated
+                    const userRating = ratings.find(r => r.user_id === this.userId);
+                    
+                    if (userRating) {
+                        const userRatingInfo = document.getElementById(`user-rating-${songId}`);
+                        const ratingText = userRatingInfo.querySelector('.rating-text');
+                        const timestamp = this.formatTimestamp(userRating.created_at);
+                        
+                        ratingText.textContent = `You rated this ${userRating.rating}/10 ${timestamp}`;
+                        userRatingInfo.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error checking user rating:', error);
+                }
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) return 'just now';
+                if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+                if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+                if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+                
+                // Format as date if older than a week
+                return 'on ' + date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+
+            setupAutoRefresh() {
+                // Refresh every 30 seconds to get new songs
+                setInterval(() => {
+                    this.loadSongs();
+                }, 30000);
+            }
+        }
+
+        // Initialize the app
+        const rater = new SpotifyRater();
+    </script>
+</body>
+</html>

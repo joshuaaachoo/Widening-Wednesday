@@ -1,0 +1,26 @@
+services:
+  # Web Service (Node.js server)
+  - type: web
+    name: wednesday-spotify-rater
+    runtime: node
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        value: /opt/render/project/src/database.sqlite
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CHANNEL_ID
+        sync: false
+      - key: WEBSITE_URL
+        sync: false
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
