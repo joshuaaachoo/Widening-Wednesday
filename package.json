@@ -2,7 +2,7 @@
   "name": "widening-wednesday",
   "version": "1.0.0",
   "description": "Discord bot and website for rating Spotify songs every Wednesday",
-  "main": "index.js",
+  "main": "server.js",
   "engines": {
     "node": ">=18.0.0"
   },
