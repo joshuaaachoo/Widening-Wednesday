@@ -411,16 +411,16 @@
                         </div>
 
                         <div class="rating-section">
-                            <label class="rating-label">Rate this song (1-10):</label>
+                            <label class="rating-label">Rate this song (1-7):</label>
                             <div class="rating-input">
                                 <input type="range" 
                                        class="rating-slider" 
                                        min="1" 
-                                       max="10" 
-                                       value="5" 
+                                       max="7" 
+                                       value="4" 
                                        data-song-id="${song.id}"
                                        oninput="this.nextElementSibling.textContent = this.value">
-                                <span class="rating-value">5</span>
+                                <span class="rating-value">4</span>
                             </div>
                         </div>
 
@@ -489,8 +489,8 @@
                         successMsg.innerHTML = `<i class="fas fa-check-circle"></i> Rating ${result.updated ? 'updated' : 'submitted'} successfully!`;
                         successMsg.style.display = 'block';
                         // Clear form
-                        ratingSlider.value = 5;
-                        ratingSlider.nextElementSibling.textContent = '5';
+                        ratingSlider.value = 4;
+                        ratingSlider.nextElementSibling.textContent = '4';
                         reviewTextarea.value = '';
                         // Update user rating info
                         await this.checkUserRating(songId);
@@ -536,7 +536,7 @@
                         const ratingText = userRatingInfo.querySelector('.rating-text');
                         const timestamp = this.formatTimestamp(userRating.created_at);
                         
-                        ratingText.textContent = `You rated this ${userRating.rating}/10 ${timestamp}`;
+                        ratingText.textContent = `You rated this ${userRating.rating}/7 ${timestamp}`;
                         userRatingInfo.style.display = 'block';
                     }
                 } catch (error) {
