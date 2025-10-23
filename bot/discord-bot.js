@@ -65,7 +65,7 @@ class DiscordBot {
             const trackInfo = await this.getSpotifyTrackInfo(trackId);
             
             // Send to website API
-            const response = await axios.post(`${process.env.WEBSITE_URL || 'http://localhost:3000'}/api/songs`, {
+            const response = await axios.post(`${process.env.WEBSITE_URL || 'https://widening-wednesday.onrender.com/'}/api/songs`, {
                 spotify_url: spotifyUrl,
                 title: trackInfo.name,
                 artist: trackInfo.artists?.[0]?.name || 'Unknown Artist',
