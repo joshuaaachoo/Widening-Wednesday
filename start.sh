@@ -60,3 +60,4 @@ trap cleanup SIGINT
 
 # Wait for processes
 wait
+

@@ -150,6 +150,16 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Visit http://localhost:${PORT} to view the website`);
 });
 
+// Start Discord bot if token is provided
+if (process.env.DISCORD_TOKEN) {
+    const DiscordBot = require('./bot/discord-bot');
+    const bot = new DiscordBot();
+    bot.start().catch(err => {
+        console.error('Failed to start Discord bot:', err);
+    });
+    console.log('Discord bot starting alongside web server...');
+}
+
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log('Shutting down server...');

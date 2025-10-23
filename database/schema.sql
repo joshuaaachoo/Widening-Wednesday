@@ -36,3 +36,4 @@ CREATE INDEX IF NOT EXISTS idx_songs_active ON songs(is_active);
 CREATE INDEX IF NOT EXISTS idx_ratings_song_id ON ratings(song_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON ratings(user_id);
 CREATE INDEX IF NOT EXISTS idx_weeks_active ON weeks(is_active);
+
