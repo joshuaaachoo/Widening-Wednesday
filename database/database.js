@@ -45,10 +45,10 @@ class Database {
     addSong(spotifyUrl, title = null, artist = null, album = null, imageUrl = null, weekId = null) {
         return new Promise((resolve, reject) => {
             const sql = `
-                INSERT INTO songs (spotify_url, title, artist, album, image_url, week_id)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO songs (spotify_url, title, artist, album, image_url, added_by, week_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
-            this.db.run(sql, [spotifyUrl, title, artist, album, imageUrl, weekId], function(err) {
+            this.db.run(sql, [spotifyUrl, title, artist, album, imageUrl, arguments[5], weekId], function(err) {
                 if (err) {
                     reject(err);
                 } else {

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS songs (
     artist TEXT,
     album TEXT,
     image_url TEXT,
+    added_by TEXT,
     added_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     week_id INTEGER,
     is_active BOOLEAN DEFAULT 1

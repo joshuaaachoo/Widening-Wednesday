@@ -48,13 +48,13 @@ app.post('/api/songs', async (req, res) => {
             currentWeek = { id: weekId };
         }
 
-        const songId = await db.addSong(spotify_url, title, artist, album, image_url, currentWeek.id);
+        const songId = await db.addSong(spotify_url, title, artist, album, image_url, added_by, currentWeek.id);
         
-        console.log(`Added song: ${title} by ${artist}`);
+        console.log(`Added song: ${title} by ${artist} (by ${added_by})`);
         res.status(201).json({ 
             id: songId, 
             message: 'Song added successfully',
-            song: { title, artist, album }
+            song: { title, artist, album, added_by }
         });
     } catch (error) {
         console.error('Error adding song:', error);
@@ -102,7 +102,7 @@ app.get('/api/ratings', async (req, res) => {
     try {
         // Join ratings with song info
         const sql = `
-            SELECT r.id, r.song_id, r.user_id, r.rating, r.review, r.created_at, s.title, s.artist, s.spotify_url
+            SELECT r.id, r.song_id, r.user_id, r.rating, r.review, r.created_at, s.title, s.artist, s.spotify_url, s.added_by
             FROM ratings r
             JOIN songs s ON r.song_id = s.id
             ORDER BY r.created_at DESC
