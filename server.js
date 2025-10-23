@@ -1,3 +1,25 @@
+// Get all ratings/reviews for all songs
+app.get('/api/ratings', async (req, res) => {
+    try {
+        // Join ratings with song info
+        const sql = `
+            SELECT r.*, s.title, s.artist, s.spotify_url, s.album, s.image_url
+            FROM ratings r
+            JOIN songs s ON r.song_id = s.id
+            ORDER BY r.created_at DESC
+        `;
+        db.db.all(sql, [], (err, rows) => {
+            if (err) {
+                console.error('Error fetching all ratings:', err);
+                return res.status(500).json({ error: 'Failed to fetch all ratings' });
+            }
+            res.json(rows);
+        });
+    } catch (error) {
+        console.error('Error in /api/ratings:', error);
+        res.status(500).json({ error: 'Failed to fetch all ratings' });
+    }
+});
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
