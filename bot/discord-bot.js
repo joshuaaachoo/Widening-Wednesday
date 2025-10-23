@@ -270,10 +270,21 @@ class DiscordBot {
     }
 }
 
-// Start the bot if this file is run directly
+
+// Start the bot and a minimal HTTP server for Koyeb health checks
 if (require.main === module) {
     const bot = new DiscordBot();
     bot.start();
+
+    // Minimal HTTP server for health check
+    const http = require('http');
+    const PORT = process.env.PORT || 8000;
+    http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('OK');
+    }).listen(PORT, () => {
+        console.log(`Health check server running on port ${PORT}`);
+    });
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
