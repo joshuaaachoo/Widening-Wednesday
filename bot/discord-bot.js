@@ -37,7 +37,6 @@ class DiscordBot {
             const spotifyLinks = message.content.match(this.spotifyRegex);
             if (spotifyLinks && spotifyLinks.length > 0) {
                 console.log(`Found ${spotifyLinks.length} Spotify link(s) in message:`, message.content);
-                
                 for (const link of spotifyLinks) {
                     try {
                         console.log(`Processing Spotify link: ${link}`);
@@ -46,8 +45,6 @@ class DiscordBot {
                         console.error('Error processing Spotify link:', error);
                     }
                 }
-            } else {
-                console.log(`No Spotify links found in message: "${message.content}"`);
             }
         });
     }

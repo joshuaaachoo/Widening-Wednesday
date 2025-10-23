@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS ratings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     song_id INTEGER NOT NULL,
     user_id TEXT NOT NULL,
-    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 10),
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 7),
     review TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (song_id) REFERENCES songs (id)

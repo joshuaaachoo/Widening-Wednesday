@@ -68,8 +68,8 @@ app.post('/api/songs/:id/rate', async (req, res) => {
         const { id } = req.params;
         const { user_id, rating, review } = req.body;
 
-        if (!user_id || !rating || rating < 1 || rating > 10) {
-            return res.status(400).json({ error: 'Valid user_id and rating (1-10) are required' });
+        if (!user_id || !rating || rating < 1 || rating > 7) {
+            return res.status(400).json({ error: 'Valid user_id and rating (1-7) are required' });
         }
 
         const result = await db.addRating(id, user_id, rating, review);
@@ -102,7 +102,7 @@ app.get('/api/ratings', async (req, res) => {
     try {
         // Join ratings with song info
         const sql = `
-            SELECT r.*, s.title, s.artist, s.spotify_url, s.album, s.image_url
+            SELECT r.id, r.song_id, r.user_id, r.rating, r.review, r.created_at, s.title, s.artist, s.spotify_url
             FROM ratings r
             JOIN songs s ON r.song_id = s.id
             ORDER BY r.created_at DESC
