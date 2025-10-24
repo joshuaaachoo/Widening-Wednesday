@@ -44,8 +44,18 @@ passport.use(new DiscordStrategy({
     return done(null, profile);
 }));
 
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'devsecret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+}));
 app.use(passport.initialize());
-app.use(passport.session && passport.session());
+app.use(passport.session());
+app.use(express.static(path.join(__dirname, 'public')));
 // Discord OAuth2 login
 app.get('/auth/discord', passport.authenticate('discord'));
 
@@ -73,16 +83,7 @@ app.get('/api/me', (req, res) => {
     }
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'devsecret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
-}));
-app.use(express.static(path.join(__dirname, 'public')));
+// ...existing code...
 
 // API Routes
 
