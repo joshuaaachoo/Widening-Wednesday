@@ -36,8 +36,9 @@ class DiscordBot {
             // }
 
             // Check for playlist links first
-            const playlistLinks = message.content.match(this.spotifyPlaylistRegex);
-            if (playlistLinks && playlistLinks.length > 0) {
+            const playlistLinksRaw = message.content.match(this.spotifyPlaylistRegex);
+            const playlistLinks = playlistLinksRaw ? [...new Set(playlistLinksRaw.map(l => l.split('?')[0]))] : [];
+            if (playlistLinks.length > 0) {
                 for (const playlistUrl of playlistLinks) {
                     try {
                         console.log(`Processing Spotify playlist link: ${playlistUrl}`);
@@ -50,8 +51,10 @@ class DiscordBot {
                 return;
             }
             // Otherwise, check for track links
-            const spotifyLinks = message.content.match(this.spotifyTrackRegex);
-            if (spotifyLinks && spotifyLinks.length > 0) {
+            const spotifyLinksRaw = message.content.match(this.spotifyTrackRegex);
+            // Normalize links (strip query params) and dedupe
+            const spotifyLinks = spotifyLinksRaw ? [...new Set(spotifyLinksRaw.map(l => l.split('?')[0]))] : [];
+            if (spotifyLinks.length > 0) {
                 for (const link of spotifyLinks) {
                     try {
                         console.log(`Processing Spotify link: ${link}`);

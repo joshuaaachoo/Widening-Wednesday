@@ -11,6 +11,8 @@ const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const rateLimit = require('express-rate-limit');
 const app = express();
+// Trust proxy for correct rate limiting and IP detection (important for Render/Heroku)
+app.set('trust proxy', 1);
 // Rate limiting (per IP, can be adjusted)
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
