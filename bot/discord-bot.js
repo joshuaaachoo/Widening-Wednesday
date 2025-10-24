@@ -93,6 +93,8 @@ class DiscordBot {
                 } catch (err) {
                     console.error('Error adding track from playlist:', err);
                 }
+                // Add a 200ms delay between requests to avoid rate limits
+                await new Promise(res => setTimeout(res, 200));
             }
             await message.reply(`✅ Added ${added} tracks from playlist!`);
         } catch (error) {
