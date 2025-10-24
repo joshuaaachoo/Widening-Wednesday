@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wednesday Spotify Rater</title>
+    <title>Widening Wednesday</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -319,8 +319,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-music"></i> Wednesday Spotify Rater</h1>
+            <h1><i class="fas fa-music"></i>Widening Wednesday</h1>
             <p>Rate the songs shared in Discord every Wednesday!</p>
+            <div id="user-auth" style="margin-top:20px;"></div>
         </div>
 
         <div id="loading" class="loading">
@@ -340,23 +341,44 @@
     </div>
 
     <script>
+        let currentUser = null;
+        async function fetchUser() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    currentUser = await res.json();
+                } else {
+                    currentUser = null;
+                }
+            } catch {
+                currentUser = null;
+            }
+            renderAuthUI();
+        }
+        function renderAuthUI() {
+            const el = document.getElementById('user-auth');
+            if (!currentUser) {
+                el.innerHTML = `<a href="/auth/discord" class="submit-btn" style="display:inline-block;width:auto;padding:8px 18px;font-size:1rem;"><i class="fab fa-discord"></i> Login with Discord</a>`;
+            } else {
+                el.innerHTML = `
+                    <span style="color:#1DB954;font-weight:bold;">Logged in as <i class="fab fa-discord"></i> ${currentUser.username}#${currentUser.discriminator}</span>
+                    <a href="/logout" class="submit-btn" style="display:inline-block;width:auto;padding:8px 18px;font-size:1rem;margin-left:15px;background:#e74c3c;">Logout</a>
+                `;
+            }
+        }
+        fetchUser();
         class SpotifyRater {
             constructor() {
                 this.songs = [];
-                this.userId = this.generateUserId();
+                this.userId = null; // Will be Discord user id if logged in
                 this.init();
             }
 
-            generateUserId() {
-                let userId = localStorage.getItem('spotify_rater_user_id');
-                if (!userId) {
-                    userId = 'user_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('spotify_rater_user_id', userId);
-                }
-                return userId;
-            }
-
             async init() {
+                await fetchUser();
+                if (currentUser) {
+                    this.userId = currentUser.id;
+                }
                 await this.loadSongs();
                 this.setupAutoRefresh();
             }
@@ -389,7 +411,6 @@
                 songsContainerEl.style.display = 'grid';
 
                 songsContainerEl.innerHTML = this.songs.map(song => this.createSongCard(song)).join('');
-                
                 // Check if user has rated each song
                 for (const song of this.songs) {
                     await this.checkUserRating(song.id);
@@ -397,9 +418,9 @@
             }
 
             createSongCard(song) {
-                const avgRating = song.avg_rating ? parseFloat(song.avg_rating).toFixed(1) : 'N/A';
                 const ratingCount = song.rating_count || 0;
-
+                let disabled = !currentUser ? 'disabled' : '';
+                let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
                 return `
                     <div class="song-card" data-song-id="${song.id}">
                         <div class="song-info">
@@ -409,8 +430,8 @@
                             <p>${song.artist || 'Unknown Artist'}</p>
                         </div>
                         </div>
-
                         <div class="rating-section">
+                            ${loginMsg}
                             <label class="rating-label">Rate this song (1-7):</label>
                             <div class="rating-input">
                                 <input type="range" 
@@ -419,34 +440,29 @@
                                        max="7" 
                                        value="4" 
                                        data-song-id="${song.id}"
-                                       oninput="this.nextElementSibling.textContent = this.value">
+                                       oninput="this.nextElementSibling.textContent = this.value"
+                                       ${disabled}>
                                 <span class="rating-value">4</span>
                             </div>
                         </div>
-
                         <div class="review-section">
                             <label class="rating-label">Optional Review:</label>
                             <textarea class="review-textarea" 
                                       placeholder="Share your thoughts about this song..." 
-                                      data-song-id="${song.id}"></textarea>
+                                      data-song-id="${song.id}" ${disabled}></textarea>
                         </div>
-
-                        <button class="submit-btn" onclick="rater.submitRating(${song.id})">
+                        <button class="submit-btn" onclick="rater.submitRating(${song.id})" ${disabled}>
                             <i class="fas fa-star"></i> Submit Rating
                         </button>
-
                         <div class="stats">
                             <span><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</span>
                         </div>
-
                         <div class="success-message" id="success-${song.id}">
                             <i class="fas fa-check-circle"></i> Rating submitted successfully!
                         </div>
-
                         <div class="error-message" id="error-${song.id}">
                             <i class="fas fa-exclamation-circle"></i> <span class="error-text"></span>
                         </div>
-
                         <div class="user-rating-info" id="user-rating-${song.id}">
                             <i class="fas fa-check-circle"></i> <span class="rating-text"></span>
                         </div>
@@ -455,6 +471,10 @@
             }
 
             async submitRating(songId) {
+                if (!currentUser) {
+                    alert('You must be logged in with Discord to rate.');
+                    return;
+                }
                 const card = document.querySelector(`[data-song-id="${songId}"]`);
                 const ratingSlider = card.querySelector('.rating-slider');
                 const reviewTextarea = card.querySelector('.review-textarea');
@@ -477,7 +497,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            user_id: this.userId,
+                            user_id: currentUser.id,
                             rating: rating,
                             review: review || null
                         })
@@ -526,15 +546,13 @@
                 try {
                     const response = await fetch(`/api/songs/${songId}/ratings`);
                     const ratings = await response.json();
-                    
                     // Find if current user has rated
-                    const userRating = ratings.find(r => r.user_id === this.userId);
-                    
+                    if (!currentUser) return;
+                    const userRating = ratings.find(r => r.user_id === currentUser.id);
                     if (userRating) {
                         const userRatingInfo = document.getElementById(`user-rating-${songId}`);
                         const ratingText = userRatingInfo.querySelector('.rating-text');
                         const timestamp = this.formatTimestamp(userRating.created_at);
-                        
                         ratingText.textContent = `You rated this ${userRating.rating}/7 ${timestamp}`;
                         userRatingInfo.style.display = 'block';
                     }
@@ -550,18 +568,14 @@
                 const diffMins = Math.floor(diffMs / 60000);
                 const diffHours = Math.floor(diffMs / 3600000);
                 const diffDays = Math.floor(diffMs / 86400000);
-                
                 if (diffMins < 1) return 'just now';
                 if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
                 if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
                 if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-                
-                // Format as date if older than a week
                 return 'on ' + date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             }
 
             setupAutoRefresh() {
-                // Refresh every 30 seconds to get new songs
                 setInterval(() => {
                     this.loadSongs();
                 }, 30000);

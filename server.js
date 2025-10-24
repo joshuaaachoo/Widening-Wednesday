@@ -4,12 +4,83 @@ const path = require('path');
 const cron = require('node-cron');
 const Database = require('./database/database');
 
+
+const cookieSession = require('cookie-session');
+
+const passport = require('passport');
+const DiscordStrategy = require('passport-discord').Strategy;
+const rateLimit = require('express-rate-limit');
 const app = express();
+// Rate limiting (per IP, can be adjusted)
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // limit each IP to 10 requests per minute
+    message: { error: 'Too many requests, please try again later.' }
+});
+
+// Helper: require Discord login
+function requireDiscordLogin(req, res, next) {
+    if (req.session && req.session.passport && req.session.passport.user) {
+        return next();
+    }
+    return res.status(401).json({ error: 'Login with Discord required.' });
+}
 const db = new Database();
+// Passport config
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
+passport.use(new DiscordStrategy({
+    clientID: process.env.DISCORD_CLIENT_ID,
+    clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    callbackURL: process.env.DISCORD_CALLBACK_URL || 'http://localhost:3000/auth/discord/callback',
+    scope: ['identify']
+}, (accessToken, refreshToken, profile, done) => {
+    // You can store user info in DB here if needed
+    return done(null, profile);
+}));
+
+app.use(passport.initialize());
+app.use(passport.session && passport.session());
+// Discord OAuth2 login
+app.get('/auth/discord', passport.authenticate('discord'));
+
+app.get('/auth/discord/callback',
+    passport.authenticate('discord', { failureRedirect: '/' }),
+    (req, res) => {
+        // Successful authentication, redirect home.
+        res.redirect('/');
+    }
+);
+
+// Logout endpoint
+app.get('/logout', (req, res) => {
+    req.session = null;
+    req.logout && req.logout();
+    res.redirect('/');
+});
+
+// Endpoint to get current user info
+app.get('/api/me', (req, res) => {
+    if (req.session && req.session.passport && req.session.passport.user) {
+        res.json(req.session.passport.user);
+    } else {
+        res.status(401).json({ error: 'Not logged in' });
+    }
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieSession({
+    name: 'session',
+    keys: [process.env.SESSION_SECRET || 'devsecret'],
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
@@ -25,8 +96,8 @@ app.get('/api/songs', async (req, res) => {
     }
 });
 
-// Add new song (called by Discord bot)
-app.post('/api/songs', async (req, res) => {
+// Add new song (called by Discord bot or admin)
+app.post('/api/songs', apiLimiter, requireDiscordLogin, async (req, res) => {
     try {
         const { spotify_url, title, artist, album, image_url, added_by, message_id } = req.body;
         
@@ -63,7 +134,7 @@ app.post('/api/songs', async (req, res) => {
 });
 
 // Add rating for a song
-app.post('/api/songs/:id/rate', async (req, res) => {
+app.post('/api/songs/:id/rate', apiLimiter, requireDiscordLogin, async (req, res) => {
     try {
         const { id } = req.params;
         const { user_id, rating, review } = req.body;
@@ -121,7 +192,7 @@ app.get('/api/ratings', async (req, res) => {
 });
 
 // Reset songs for new Wednesday (admin endpoint)
-app.post('/api/admin/reset', async (req, res) => {
+app.post('/api/admin/reset', apiLimiter, requireDiscordLogin, async (req, res) => {
     try {
         await db.resetSongs();
         
@@ -139,6 +210,11 @@ app.post('/api/admin/reset', async (req, res) => {
         console.error('Error resetting songs:', error);
         res.status(500).json({ error: 'Failed to reset songs' });
     }
+});
+
+// Serve the admin song submission page
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Serve the main page

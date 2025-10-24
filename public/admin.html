@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Add Song</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; background: #f7f7f7; padding: 40px; }
+        .container { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px #0001; padding: 30px; }
+        h2 { text-align: center; margin-bottom: 20px; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background: #1DB954; color: #fff; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; }
+        .success { color: green; margin-top: 15px; text-align: center; }
+        .error { color: red; margin-top: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin: Add Song</h2>
+        <div id="user-auth" style="margin-bottom:20px;"></div>
+        <form id="addSongForm">
+            <label>Spotify URL<input type="text" name="spotify_url" required></label>
+            <label>Title<input type="text" name="title"></label>
+            <label>Artist<input type="text" name="artist"></label>
+            <label>Album<input type="text" name="album"></label>
+            <label>Image URL<input type="text" name="image_url"></label>
+            <label>Added By (Discord username)<input type="text" name="added_by"></label>
+            <button type="submit">Add Song</button>
+        </form>
+        <div class="success" id="successMsg" style="display:none;"></div>
+        <div class="error" id="errorMsg" style="display:none;"></div>
+    </div>
+    <script>
+        let currentUser = null;
+        async function fetchUser() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    currentUser = await res.json();
+                } else {
+                    currentUser = null;
+                }
+            } catch {
+                currentUser = null;
+            }
+            renderAuthUI();
+        }
+        function renderAuthUI() {
+            const el = document.getElementById('user-auth');
+            const form = document.getElementById('addSongForm');
+            if (!currentUser) {
+                el.innerHTML = `<a href="/auth/discord" style="display:inline-block;padding:8px 18px;font-size:1rem;background:#1DB954;color:#fff;border-radius:5px;text-decoration:none;">Login with Discord</a>`;
+                form.style.display = 'none';
+            } else {
+                el.innerHTML = `
+                    <span style="color:#1DB954;font-weight:bold;">Logged in as <i class='fab fa-discord'></i> ${currentUser.username}#${currentUser.discriminator}</span>
+                    <a href="/logout" style="display:inline-block;padding:8px 18px;font-size:1rem;background:#e74c3c;color:#fff;border-radius:5px;text-decoration:none;margin-left:15px;">Logout</a>
+                `;
+                form.style.display = 'block';
+            }
+        }
+        fetchUser();
+        document.getElementById('addSongForm').onsubmit = async function(e) {
+            e.preventDefault();
+            document.getElementById('successMsg').style.display = 'none';
+            document.getElementById('errorMsg').style.display = 'none';
+            if (!currentUser) {
+                document.getElementById('errorMsg').textContent = 'You must be logged in with Discord to add songs.';
+                document.getElementById('errorMsg').style.display = 'block';
+                return;
+            }
+            const form = e.target;
+            const data = Object.fromEntries(new FormData(form));
+            try {
+                const res = await fetch('/api/songs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    document.getElementById('successMsg').textContent = 'Song added!';
+                    document.getElementById('successMsg').style.display = 'block';
+                    form.reset();
+                } else {
+                    document.getElementById('errorMsg').textContent = result.error || 'Failed to add song.';
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('errorMsg').textContent = 'Network error.';
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
