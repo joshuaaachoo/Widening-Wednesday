@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, Events, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
+const spotify = require('./spotify-api');
 require('dotenv').config();
 
 class DiscordBot {
@@ -13,7 +14,8 @@ class DiscordBot {
         });
 
         this.setupEventHandlers();
-        this.spotifyRegex = /https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+/g;
+    this.spotifyTrackRegex = /https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+/g;
+    this.spotifyPlaylistRegex = /https:\/\/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/g;
     }
 
     setupEventHandlers() {
@@ -33,10 +35,23 @@ class DiscordBot {
             //     return;
             // }
 
-            // Check if message contains Spotify links
-            const spotifyLinks = message.content.match(this.spotifyRegex);
+            // Check for playlist links first
+            const playlistLinks = message.content.match(this.spotifyPlaylistRegex);
+            if (playlistLinks && playlistLinks.length > 0) {
+                for (const playlistUrl of playlistLinks) {
+                    try {
+                        console.log(`Processing Spotify playlist link: ${playlistUrl}`);
+                        await this.processSpotifyPlaylistLink(playlistUrl, message);
+                    } catch (error) {
+                        console.error('Error processing Spotify playlist link:', error);
+                    }
+                }
+                // If a playlist is present, skip processing track links in the same message to avoid duplicates
+                return;
+            }
+            // Otherwise, check for track links
+            const spotifyLinks = message.content.match(this.spotifyTrackRegex);
             if (spotifyLinks && spotifyLinks.length > 0) {
-                console.log(`Found ${spotifyLinks.length} Spotify link(s) in message:`, message.content);
                 for (const link of spotifyLinks) {
                     try {
                         console.log(`Processing Spotify link: ${link}`);
@@ -49,7 +64,44 @@ class DiscordBot {
         });
     }
 
-    async processSpotifyLink(spotifyUrl, message) {
+    async processSpotifyPlaylistLink(playlistUrl, message) {
+        // Extract playlist ID
+        const match = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/);
+        if (!match) {
+            console.log('Could not extract playlist ID from URL:', playlistUrl);
+            return;
+        }
+        const playlistId = match[1];
+        try {
+            const tracks = await spotify.getPlaylistTracks(playlistId);
+            if (!tracks.length) {
+                await message.reply('❌ No tracks found in that playlist.');
+                return;
+            }
+            await message.reply(`⏳ Adding ${tracks.length} tracks from playlist...`);
+            let added = 0;
+            for (const item of tracks) {
+                // Some playlist items may not have a track (e.g. removed)
+                const track = item.track;
+                if (!track || !track.id) continue;
+                // Reuse processSpotifyLink logic, but pass a fake Spotify URL
+                const fakeUrl = `https://open.spotify.com/track/${track.id}`;
+                // Use a try/catch to avoid one failure stopping the rest
+                try {
+                    await this.processSpotifyLink(fakeUrl, message, track);
+                    added++;
+                } catch (err) {
+                    console.error('Error adding track from playlist:', err);
+                }
+            }
+            await message.reply(`✅ Added ${added} tracks from playlist!`);
+        } catch (error) {
+            console.error('Error fetching playlist tracks:', error);
+            await message.reply('❌ Failed to fetch playlist tracks.');
+        }
+    }
+
+    async processSpotifyLink(spotifyUrl, message, preFetchedTrack = null) {
         try {
             // Extract track ID from Spotify URL
             const trackId = this.extractTrackId(spotifyUrl);
@@ -58,9 +110,9 @@ class DiscordBot {
                 return;
             }
 
-            // Get track information from Spotify (you'll need to implement this)
-            const trackInfo = await this.getSpotifyTrackInfo(trackId);
-            
+            // Use pre-fetched track if provided (from playlist), else fetch
+            const trackInfo = preFetchedTrack || await this.getSpotifyTrackInfo(trackId);
+
             // Build API URL without double slash
             const baseUrl = (process.env.WEBSITE_URL || 'https://widening-wednesday.onrender.com').replace(/\/$/, '');
             const apiUrl = `${baseUrl}/api/songs`;
@@ -75,24 +127,28 @@ class DiscordBot {
             });
 
             if (response.status === 200 || response.status === 201) {
-                // Send confirmation to Discord
-                const embed = new EmbedBuilder()
-                    .setTitle('🎵 Song Added to Rating Queue!')
-                    .setDescription(`**${trackInfo.name}** by ${trackInfo.artists?.[0]?.name || 'Unknown Artist'}`)
-                    .setColor(0x1DB954)
-                    .setThumbnail(trackInfo.album?.images?.[0]?.url || null)
-                    .addFields(
-                        { name: 'Added by', value: message.author.username, inline: true },
-                        { name: 'Status', value: 'Ready for rating!', inline: true }
-                    )
-                    .setTimestamp();
+                // Only send confirmation for single tracks, not for every playlist track
+                if (!preFetchedTrack) {
+                    const embed = new EmbedBuilder()
+                        .setTitle('🎵 Song Added to Rating Queue!')
+                        .setDescription(`**${trackInfo.name}** by ${trackInfo.artists?.[0]?.name || 'Unknown Artist'}`)
+                        .setColor(0x1DB954)
+                        .setThumbnail(trackInfo.album?.images?.[0]?.url || null)
+                        .addFields(
+                            { name: 'Added by', value: message.author.username, inline: true },
+                            { name: 'Status', value: 'Ready for rating!', inline: true }
+                        )
+                        .setTimestamp();
 
-                await message.reply({ embeds: [embed] });
+                    await message.reply({ embeds: [embed] });
+                }
             }
 
         } catch (error) {
             console.error('Error processing Spotify link:', error);
-            await message.reply('❌ Sorry, I couldn\'t process that Spotify link. Please try again.');
+            if (!preFetchedTrack) {
+                await message.reply('❌ Sorry, I couldn\'t process that Spotify link. Please try again.');
+            }
         }
     }
 
@@ -174,81 +230,19 @@ class DiscordBot {
 
     async getSpotifyTrackInfo(trackId) {
         try {
-            // Try scraping Spotify web page first
-            console.log('Trying Spotify web scraping...');
-            const webResult = await this.getSpotifyTrackInfoFromWeb(trackId);
-            if (webResult) {
-                return webResult;
-            }
-            
-            // Try alternative: Last.fm API (no auth required)
-            try {
-                console.log('Trying Last.fm API...');
-                const lastfmResponse = await axios.get(`http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=your_lastfm_api_key&track=${encodeURIComponent('track name')}&artist=${encodeURIComponent('artist name')}&format=json`);
-                // This would require the track name and artist, so we'll skip for now
-            } catch (lastfmError) {
-                console.log('Last.fm API not available');
-            }
-            
-            // Fallback to oEmbed API
-            console.log('Web scraping failed, trying oEmbed...');
-            const response = await axios.get(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${trackId}`);
-            const data = response.data;
-            
-            console.log('Spotify oEmbed response:', JSON.stringify(data, null, 2));
-            
-            // For oEmbed, we can only get the title, so we'll use that as the song name
-            let artist = 'Unknown Artist';
-            let songName = data.title || 'Unknown Track';
-            
-            // Handle "song and lyrics by" pattern in oEmbed
-            if (songName.includes('song and lyrics by')) {
-                // Try to extract artist and song from "song and lyrics by Artist by Song"
-                const match = songName.match(/song and lyrics by (.+?) by (.+)/);
-                if (match) {
-                    artist = match[1].trim();
-                    songName = match[2].trim();
-                } else {
-                    // Try "song and lyrics by Artist - Song"
-                    const match2 = songName.match(/song and lyrics by (.+?) - (.+)/);
-                    if (match2) {
-                        artist = match2[1].trim();
-                        songName = match2[2].trim();
-                    } else {
-                        // Just remove the prefix
-                        songName = songName.replace('song and lyrics by ', '').trim();
-                    }
-                }
-            } else if (songName.includes(' - ')) {
-                // Try to parse "Artist - Song" pattern
-                const parts = songName.split(' - ');
-                if (parts.length >= 2) {
-                    artist = parts[0].trim();
-                    songName = parts.slice(1).join(' - ').trim();
-                }
-            }
-            
-            console.log(`Parsed: Artist="${artist}", Song="${songName}"`);
-            
+            // Use official Spotify API for reliable metadata
+            const track = await spotify.getTrack(trackId);
             return {
-                name: songName,
-                artists: [{ name: artist }],
-                album: { 
-                    name: null,
-                    images: [{ url: data.thumbnail_url || null }]
-                }
+                name: track.name,
+                artists: track.artists,
+                album: track.album
             };
-            
         } catch (error) {
-            console.error('Error fetching Spotify track info:', error);
-            // Final fallback
+            console.error('Error fetching Spotify track info from API:', error);
             return {
                 name: 'Unknown Track',
                 artists: [{ name: 'Unknown Artist' }],
-                album: { 
-                    name: null,
-                    images: [{ url: null }]
-                }
+                album: { name: null, images: [{ url: null }] }
             };
         }
     }
