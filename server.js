@@ -5,7 +5,7 @@ const cron = require('node-cron');
 const Database = require('./database/database');
 
 
-const cookieSession = require('cookie-session');
+const session = require('express-session');
 
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
@@ -76,10 +76,11 @@ app.get('/api/me', (req, res) => {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(cookieSession({
-    name: 'session',
-    keys: [process.env.SESSION_SECRET || 'devsecret'],
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'devsecret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
