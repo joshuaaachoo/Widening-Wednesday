@@ -15,8 +15,8 @@ const app = express();
 app.set('trust proxy', 1);
 // Rate limiting (per IP, can be adjusted)
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 10, // limit each IP to 10 requests per minute
+    windowMs: 2 * 60 * 1000, // 2 minutes
+    max: 100, // allow up to 100 requests per 2 minutes per IP (good for playlist bursts)
     message: { error: 'Too many requests, please try again later.' }
 });
 
