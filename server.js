@@ -99,7 +99,7 @@ app.get('/api/songs', async (req, res) => {
 });
 
 // Add new song (called by Discord bot or admin)
-app.post('/api/songs', apiLimiter, requireDiscordLogin, async (req, res) => {
+app.post('/api/songs', apiLimiter, async (req, res) => {
     try {
         const { spotify_url, title, artist, album, image_url, added_by, message_id } = req.body;
         
