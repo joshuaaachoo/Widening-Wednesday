@@ -1,3 +1,37 @@
+// ====== VIEW SWITCHING (CodePen style) ======
+function switchView(view) {
+    currentView = view;
+    const slideshowView = document.getElementById('slideshowView');
+    const catalogView = document.getElementById('catalogView');
+    const btnSlideshow = document.getElementById('btnSlideshow');
+    const btnCatalog = document.getElementById('btnCatalog');
+    if (view === 'slideshow') {
+        slideshowView.classList.remove('hidden');
+        catalogView.classList.remove('active');
+        btnSlideshow.classList.add('active');
+        btnCatalog.classList.remove('active');
+    } else {
+        slideshowView.classList.add('hidden');
+        catalogView.classList.add('active');
+        btnSlideshow.classList.remove('active');
+        btnCatalog.classList.add('active');
+    }
+}
+
+// Allow click/space to advance slide (CodePen style)
+document.addEventListener('keydown', (e) => {
+    if (currentView !== 'slideshow' || isTransitioning) return;
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        let next = (currentSlideIndex + 1) % songs.length;
+        navigateToSlide(next);
+    }
+});
+
+document.querySelector('.webgl-canvas').addEventListener('click', () => {
+    if (currentView !== 'slideshow' || isTransitioning) return;
+    let next = (currentSlideIndex + 1) % songs.length;
+    navigateToSlide(next);
+});
 let currentView = 'slideshow';
 let currentSlideIndex = 0;
 let isTransitioning = false;

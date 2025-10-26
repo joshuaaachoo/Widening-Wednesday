@@ -384,21 +384,34 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="view-toggle">
+        <button id="btnSlideshow" class="active" onclick="switchView('slideshow')">
+            <i class="fas fa-play"></i> Slideshow
+        </button>
+        <button id="btnCatalog" onclick="switchView('catalog')">
+            <i class="fas fa-th"></i> Catalog
+        </button>
+    </div>
+
+    <div class="slideshow-view" id="slideshowView">
+        <canvas class="webgl-canvas"></canvas>
+        <div class="slideshow-ui">
+            <div class="nav-instructions">Click/Space: Next • ← → : Navigate</div>
+            <span class="slide-counter" id="slideCounter">01</span>
+            <span class="slide-total" id="slideTotal">00</span>
+            <nav class="slides-navigation" id="slidesNav"></nav>
+        </div>
+    </div>
+
+    <div class="catalog-view" id="catalogView">
+        <div class="catalog-header">
             <h1>Widening Wednesday</h1>
             <p>Rate the songs shared every Wednesday!</p>
-            <div id="userAuth" style="margin-top:20px;"></div>
+            <div class="user-auth" id="userAuth">
+                <div class="loading"><i class="fas fa-spinner"></i></div>
+            </div>
         </div>
-
-        <canvas class="webgl-canvas" style="width:100%;height:400px;display:block;border-radius:24px;"></canvas>
-        <div id="slideInfo" class="slide-info-overlay"></div>
-        <div class="slideshow-controls" style="display:flex;justify-content:center;align-items:center;margin:30px 0 10px 0;gap:30px;">
-            <button id="slidePrev" class="slideshow-arrow left" aria-label="Previous song"><i class="fas fa-chevron-left"></i></button>
-            <div class="slide-counter"><span id="slideCounter">01</span>/<span id="slideTotal">01</span></div>
-            <button id="slideNext" class="slideshow-arrow right" aria-label="Next song"><i class="fas fa-chevron-right"></i></button>
-        </div>
-        <div id="slidesNav" class="slides-nav" style="display:flex;justify-content:center;gap:10px;"></div>
+        <div class="songs-grid" id="songsGrid"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
