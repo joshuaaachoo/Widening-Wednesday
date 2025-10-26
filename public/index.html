@@ -388,25 +388,17 @@
         <div class="header">
             <h1>Widening Wednesday</h1>
             <p>Rate the songs shared every Wednesday!</p>
-            <div id="user-auth" style="margin-top:20px;"></div>
+            <div id="userAuth" style="margin-top:20px;"></div>
         </div>
 
-        <div id="loading" class="loading">
-            <i class="fas fa-spinner"></i>
-            <div>Loading songs...</div>
+        <canvas class="webgl-canvas" style="width:100%;height:400px;display:block;border-radius:24px;"></canvas>
+        <div id="slideInfo" class="slide-info-overlay"></div>
+        <div class="slideshow-controls" style="display:flex;justify-content:center;align-items:center;margin:30px 0 10px 0;gap:30px;">
+            <button id="slidePrev" class="slideshow-arrow left" aria-label="Previous song"><i class="fas fa-chevron-left"></i></button>
+            <div class="slide-counter"><span id="slideCounter">01</span>/<span id="slideTotal">01</span></div>
+            <button id="slideNext" class="slideshow-arrow right" aria-label="Next song"><i class="fas fa-chevron-right"></i></button>
         </div>
-
-        <div id="empty-state" class="empty-state" style="display: none;">
-            <i class="fas fa-music"></i>
-            <h3>No songs to rate yet</h3>
-            <p>Check back on Wednesday when new songs are shared!</p>
-        </div>
-
-        <div id="slideshow" class="slideshow-container" style="display: none;">
-            <button class="slideshow-arrow left" id="arrow-left" aria-label="Previous song" style="display:none;"><i class="fas fa-chevron-left"></i></button>
-            <div class="slideshow-cards" id="slideshow-cards"></div>
-            <button class="slideshow-arrow right" id="arrow-right" aria-label="Next song" style="display:none;"><i class="fas fa-chevron-right"></i></button>
-        </div>
+        <div id="slidesNav" class="slides-nav" style="display:flex;justify-content:center;gap:10px;"></div>
     </div>
 
     <script>
@@ -415,142 +407,8 @@
             try {
                 const res = await fetch('/api/me');
                 if (res.ok) {
-                    currentUser = await res.json();
-                } else {
-                    currentUser = null;
-                }
-            } catch {
-                currentUser = null;
-            }
-            renderAuthUI();
-        }
-        function renderAuthUI() {
-            const el = document.getElementById('user-auth');
-            if (!currentUser) {
-                el.innerHTML = `<a href="/auth/discord" class="submit-btn" style="display:inline-block;width:auto;padding:8px 18px;font-size:1rem;"><i class="fab fa-discord"></i> Login with Discord</a>`;
-            } else {
-                el.innerHTML = `
-                    <span style="color:#1DB954;font-weight:bold;">Logged in as <i class="fab fa-discord"></i> ${currentUser.username}#${currentUser.discriminator}</span>
-                    <a href="/logout" class="submit-btn" style="display:inline-block;width:auto;padding:8px 18px;font-size:1rem;margin-left:15px;background:#e74c3c;">Logout</a>
-                `;
-            }
-        }
-        fetchUser();
-    class SpotifyRater {
-            constructor() {
-                this.songs = [];
-                this.userId = null; // Will be Discord user id if logged in
-                this.init();
-            }
-
-            async init() {
-                await fetchUser();
-                if (currentUser) {
-                    this.userId = currentUser.id;
-                }
-                await this.loadSongs();
-                this.setupAutoRefresh();
-            }
-
-            async loadSongs() {
-                try {
-                    const response = await fetch('/api/songs');
-                    this.songs = await response.json();
-                    this.renderSongs();
-                } catch (error) {
-                    console.error('Error loading songs:', error);
-                    this.showError('Failed to load songs. Please refresh the page.');
-                }
-            }
-
-            async renderSongs() {
-                const loadingEl = document.getElementById('loading');
-                const emptyStateEl = document.getElementById('empty-state');
-                const slideshowEl = document.getElementById('slideshow');
-                const cardsEl = document.getElementById('slideshow-cards');
-                const arrowLeft = document.getElementById('arrow-left');
-                const arrowRight = document.getElementById('arrow-right');
-
-                loadingEl.style.display = 'none';
-
-                if (this.songs.length === 0) {
-                    emptyStateEl.style.display = 'block';
-                    slideshowEl.style.display = 'none';
-                    return;
-                }
-
-                emptyStateEl.style.display = 'none';
-                slideshowEl.style.display = 'flex';
-
-                this.currentIndex = this.currentIndex || 0;
-                if (this.currentIndex >= this.songs.length) this.currentIndex = 0;
-                if (this.currentIndex < 0) this.currentIndex = this.songs.length - 1;
-
-                // Show/hide arrows
-                arrowLeft.style.display = this.songs.length > 1 ? 'block' : 'none';
-                arrowRight.style.display = this.songs.length > 1 ? 'block' : 'none';
-
-                // Render all cards for 3D stacking
-                cardsEl.innerHTML = '';
-                const maxStack = 2; // how many cards to show on each side
-                for (let i = 0; i < this.songs.length; i++) {
-                    const song = this.songs[i];
-                    const card = document.createElement('div');
-                    card.className = 'slideshow-card';
-                    card.innerHTML = this.createSongCard(song);
-                    // Calculate position relative to currentIndex
-                    let offset = i - this.currentIndex;
-                    if (offset < -Math.floor(this.songs.length / 2)) offset += this.songs.length;
-                    if (offset > Math.floor(this.songs.length / 2)) offset -= this.songs.length;
-                    // 3D transform
-                    let z = -Math.abs(offset);
-                    let scale = 1 - Math.abs(offset) * 0.12;
-                    let rotateY = offset * 18;
-                    let translateX = offset * 60;
-                    let opacity = Math.abs(offset) > maxStack ? 0 : 1 - Math.abs(offset) * 0.25;
-                    card.style.transform = `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`;
-                    card.style.zIndex = 100 - Math.abs(offset);
-                    card.style.opacity = opacity;
-                    card.style.pointerEvents = offset === 0 ? 'auto' : 'none';
-                    if (offset === 0) {
-                        // Only check user rating for the center card
-                        this.checkUserRating(song.id);
-                    }
-                    cardsEl.appendChild(card);
-                }
-
-                // Arrow event listeners
-                arrowLeft.onclick = () => {
-                    this.currentIndex = (this.currentIndex - 1 + this.songs.length) % this.songs.length;
-                    this.renderSongs();
-                };
-                arrowRight.onclick = () => {
-                    this.currentIndex = (this.currentIndex + 1) % this.songs.length;
-                    this.renderSongs();
-                };
-
-                // Keyboard navigation
-                if (!this._keyboardHandler) {
-                    this._keyboardHandler = (e) => {
-                        if (e.key === 'ArrowLeft') {
-                            arrowLeft.click();
-                        } else if (e.key === 'ArrowRight') {
-                            arrowRight.click();
-                        }
-                    };
-                    window.addEventListener('keydown', this._keyboardHandler);
-                }
-            }
-
-            createSongCard(song) {
-                const ratingCount = song.rating_count || 0;
-                let disabled = !currentUser ? 'disabled' : '';
-                let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
-                return `
-                <div class="song-card" data-song-id="${song.id}">
-                    <div class="song-info">
-                        ${song.image_url ? `<img src="${song.image_url}" alt="${song.title}" class="song-image">` : '<div class="song-image" style="background: #232526; display: flex; align-items: center; justify-content: center; height:180px;"><i class="fas fa-music" style="color: #444; font-size: 3rem;"></i></div>'}
-                        <div class="song-details" style="padding: 18px 22px 0 22px; width: 100%; text-align: center;">
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                    <script src="/public/slideshow.js"></script>
                             <h3><a href="${song.spotify_url}" target="_blank">${song.title || 'Unknown Title'}</a></h3>
                             <p>${song.artist || 'Unknown Artist'}</p>
                         </div>
