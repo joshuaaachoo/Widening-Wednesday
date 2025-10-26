@@ -42,26 +42,66 @@
             opacity: 0.9;
         }
 
-        .songs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
+        .slideshow-container {
+            position: relative;
+            width: 370px;
+            margin: 0 auto 40px auto;
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slideshow-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(35,37,38,0.85);
+            border: none;
+            color: #fff;
+            font-size: 2.2rem;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            z-index: 2;
+            transition: background 0.2s;
+        }
+        .slideshow-arrow:hover {
+            background: #1DB954;
+            color: #fff;
+        }
+        .slideshow-arrow.left {
+            left: -60px;
+        }
+        .slideshow-arrow.right {
+            right: -60px;
+        }
+        .slideshow-card {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .song-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #232526;
+            border-radius: 24px;
+            padding: 0;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
             position: relative;
             overflow: hidden;
+            width: 340px;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            border: 1.5px solid rgba(255,255,255,0.08);
         }
 
         .song-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
         }
 
         .song-card::before {
@@ -70,29 +110,34 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 8px;
             background: linear-gradient(90deg, #1DB954, #1ed760);
         }
 
         .song-info {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 0;
+            position: relative;
+            padding: 0;
         }
 
         .song-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            margin-right: 15px;
+            width: 100%;
+            height: 180px;
             object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            margin: 0;
         }
 
         .song-details h3 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-            color: #333;
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .song-details h3 a {
@@ -107,19 +152,21 @@
         }
 
         .song-details p {
-            color: #666;
+            color: #bdbdbd;
             font-size: 1rem;
+            margin-bottom: 0.5em;
         }
 
         .rating-section {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            margin-top: 18px;
         }
 
         .rating-label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #fff;
         }
 
         .rating-input {
@@ -132,29 +179,31 @@
             flex: 1;
             height: 8px;
             border-radius: 4px;
-            background: #ddd;
+            background: #444;
             outline: none;
+            appearance: none;
             -webkit-appearance: none;
         }
 
         .rating-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            background: #1DB954;
+            background: linear-gradient(135deg, #1DB954, #1ed760);
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+            border: 2px solid #fff;
         }
 
         .rating-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            background: #1DB954;
+            background: linear-gradient(135deg, #1DB954, #1ed760);
             cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.22);
         }
 
         .rating-value {
@@ -166,16 +215,18 @@
         }
 
         .review-section {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .review-textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #333;
+            background: #18191a;
+            color: #fff;
             border-radius: 10px;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             resize: vertical;
             min-height: 80px;
             transition: border-color 0.3s ease;
@@ -197,6 +248,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
         }
 
         .submit-btn:hover {
@@ -213,12 +265,12 @@
 
         .stats {
             display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            font-size: 0.9rem;
-            color: #666;
+            justify-content: flex-end;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+            font-size: 0.92rem;
+            color: #bdbdbd;
         }
 
         .loading {
@@ -282,13 +334,13 @@
         }
 
         .user-rating-info {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: #1DB95422;
+            color: #1DB954;
             padding: 10px 15px;
             border-radius: 8px;
             margin-top: 15px;
-            border: 1px solid #c8e6c9;
-            font-size: 0.9rem;
+            border: 1px solid #1DB95444;
+            font-size: 0.95rem;
             display: none;
         }
 
@@ -300,18 +352,17 @@
             .container {
                 padding: 10px;
             }
-            
             .header h1 {
                 font-size: 2rem;
             }
-            
             .songs-grid {
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 gap: 20px;
             }
-            
             .song-card {
-                padding: 20px;
+                width: 100%;
+                min-width: 0;
+                min-height: 0;
             }
         }
     </style>
@@ -335,8 +386,10 @@
             <p>Check back on Wednesday when new songs are shared!</p>
         </div>
 
-        <div id="songs-container" class="songs-grid" style="display: none;">
-            <!-- Songs will be populated here -->
+        <div id="slideshow" class="slideshow-container" style="display: none;">
+            <button class="slideshow-arrow left" id="arrow-left" aria-label="Previous song" style="display:none;"><i class="fas fa-chevron-left"></i></button>
+            <div class="slideshow-card" id="slideshow-card"></div>
+            <button class="slideshow-arrow right" id="arrow-right" aria-label="Next song" style="display:none;"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 
@@ -367,7 +420,7 @@
             }
         }
         fetchUser();
-        class SpotifyRater {
+    class SpotifyRater {
             constructor() {
                 this.songs = [];
                 this.userId = null; // Will be Discord user id if logged in
@@ -397,24 +450,44 @@
             async renderSongs() {
                 const loadingEl = document.getElementById('loading');
                 const emptyStateEl = document.getElementById('empty-state');
-                const songsContainerEl = document.getElementById('songs-container');
+                const slideshowEl = document.getElementById('slideshow');
+                const cardEl = document.getElementById('slideshow-card');
+                const arrowLeft = document.getElementById('arrow-left');
+                const arrowRight = document.getElementById('arrow-right');
 
                 loadingEl.style.display = 'none';
 
                 if (this.songs.length === 0) {
                     emptyStateEl.style.display = 'block';
-                    songsContainerEl.style.display = 'none';
+                    slideshowEl.style.display = 'none';
                     return;
                 }
 
                 emptyStateEl.style.display = 'none';
-                songsContainerEl.style.display = 'grid';
+                slideshowEl.style.display = 'flex';
 
-                songsContainerEl.innerHTML = this.songs.map(song => this.createSongCard(song)).join('');
-                // Check if user has rated each song
-                for (const song of this.songs) {
-                    await this.checkUserRating(song.id);
-                }
+                this.currentIndex = this.currentIndex || 0;
+                if (this.currentIndex >= this.songs.length) this.currentIndex = 0;
+                if (this.currentIndex < 0) this.currentIndex = this.songs.length - 1;
+
+                // Show/hide arrows
+                arrowLeft.style.display = this.songs.length > 1 ? 'block' : 'none';
+                arrowRight.style.display = this.songs.length > 1 ? 'block' : 'none';
+
+                // Render current card
+                const song = this.songs[this.currentIndex];
+                cardEl.innerHTML = this.createSongCard(song);
+                await this.checkUserRating(song.id);
+
+                // Arrow event listeners
+                arrowLeft.onclick = () => {
+                    this.currentIndex = (this.currentIndex - 1 + this.songs.length) % this.songs.length;
+                    this.renderSongs();
+                };
+                arrowRight.onclick = () => {
+                    this.currentIndex = (this.currentIndex + 1) % this.songs.length;
+                    this.renderSongs();
+                };
             }
 
             createSongCard(song) {
@@ -422,51 +495,52 @@
                 let disabled = !currentUser ? 'disabled' : '';
                 let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
                 return `
-                    <div class="song-card" data-song-id="${song.id}">
-                        <div class="song-info">
-                            ${song.image_url ? `<img src="${song.image_url}" alt="${song.title}" class="song-image">` : '<div class="song-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-music" style="color: #ccc; font-size: 2rem;"></i></div>'}
-                        <div class="song-details">
+                <div class="song-card" data-song-id="${song.id}">
+                    <div class="song-info">
+                        ${song.image_url ? `<img src="${song.image_url}" alt="${song.title}" class="song-image">` : '<div class="song-image" style="background: #232526; display: flex; align-items: center; justify-content: center; height:180px;"><i class="fas fa-music" style="color: #444; font-size: 3rem;"></i></div>'}
+                        <div class="song-details" style="padding: 18px 22px 0 22px; width: 100%; text-align: center;">
                             <h3><a href="${song.spotify_url}" target="_blank">${song.title || 'Unknown Title'}</a></h3>
                             <p>${song.artist || 'Unknown Artist'}</p>
                         </div>
-                        </div>
-                        <div class="rating-section">
-                            ${loginMsg}
-                            <label class="rating-label">Rate this song (1-7):</label>
-                            <div class="rating-input">
-                                <input type="range" 
-                                       class="rating-slider" 
-                                       min="1" 
-                                       max="7" 
-                                       value="4" 
-                                       data-song-id="${song.id}"
-                                       oninput="this.nextElementSibling.textContent = this.value"
-                                       ${disabled}>
-                                <span class="rating-value">4</span>
-                            </div>
-                        </div>
-                        <div class="review-section">
-                            <label class="rating-label">Optional Review:</label>
-                            <textarea class="review-textarea" 
-                                      placeholder="Share your thoughts about this song..." 
-                                      data-song-id="${song.id}" ${disabled}></textarea>
-                        </div>
-                        <button class="submit-btn" onclick="rater.submitRating(${song.id})" ${disabled}>
-                            <i class="fas fa-star"></i> Submit Rating
-                        </button>
-                        <div class="stats">
-                            <span><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</span>
-                        </div>
-                        <div class="success-message" id="success-${song.id}">
-                            <i class="fas fa-check-circle"></i> Rating submitted successfully!
-                        </div>
-                        <div class="error-message" id="error-${song.id}">
-                            <i class="fas fa-exclamation-circle"></i> <span class="error-text"></span>
-                        </div>
-                        <div class="user-rating-info" id="user-rating-${song.id}">
-                            <i class="fas fa-check-circle"></i> <span class="rating-text"></span>
+                    </div>
+                    <div class="rating-section" style="padding: 0 22px;">
+                        ${loginMsg}
+                        <label class="rating-label">Rate this song (1-7):</label>
+                        <div class="rating-input">
+                            <input type="range" 
+                                   class="rating-slider" 
+                                   min="1" 
+                                   max="7" 
+                                   value="4" 
+                                   data-song-id="${song.id}"
+                                   oninput="this.nextElementSibling.textContent = this.value"
+                                   ${disabled}>
+                            <span class="rating-value">4</span>
                         </div>
                     </div>
+                    <div class="review-section" style="padding: 0 22px;">
+                        <label class="rating-label">Optional Review:</label>
+                        <textarea class="review-textarea" 
+                                  placeholder="Share your thoughts about this song..." 
+                                  data-song-id="${song.id}" ${disabled}></textarea>
+                    </div>
+                    <div style="flex:1;"></div>
+                    <button class="submit-btn" onclick="rater.submitRating(${song.id})" ${disabled}>
+                        <i class="fas fa-star"></i> Submit Rating
+                    </button>
+                    <div class="stats">
+                        <span><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="success-message" id="success-${song.id}">
+                        <i class="fas fa-check-circle"></i> Rating submitted successfully!
+                    </div>
+                    <div class="error-message" id="error-${song.id}">
+                        <i class="fas fa-exclamation-circle"></i> <span class="error-text"></span>
+                    </div>
+                    <div class="user-rating-info" id="user-rating-${song.id}">
+                        <i class="fas fa-check-circle"></i> <span class="rating-text"></span>
+                    </div>
+                </div>
                 `;
             }
 
@@ -582,8 +656,8 @@
             }
         }
 
-        // Initialize the app
-        const rater = new SpotifyRater();
+    // Initialize the app
+    const rater = new SpotifyRater();
     </script>
 </body>
 </html>
