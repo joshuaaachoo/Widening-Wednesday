@@ -361,6 +361,8 @@ function render() {
     const info = document.getElementById('slideInfo');
     if (!songs.length || !info) return;
     const song = songs[currentSlideIndex];
+    let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
+    let ratingCount = song.rating_count || 0;
     info.innerHTML = `
         <div class="slide-song-title">${song.title || 'Unknown Title'}</div>
         <div class="slide-song-artist">${song.artist || 'Unknown Artist'}</div>
@@ -368,17 +370,19 @@ function render() {
             <a href="${song.spotify_url}" target="_blank" class="slide-song-link"><i class="fab fa-spotify"></i> Open in Spotify</a>
         </div>
         <div class="slide-song-rating">
+            ${loginMsg}
             <label class="rating-label">Rate this song (1-7):</label>
             <div class="rating-input">
-                <input type="range" class="rating-slider" min="1" max="7" value="4" data-song-id="${song.id}" oninput="this.nextElementSibling.textContent = this.value">
+                <input type="range" class="rating-slider" min="1" max="7" value="4" data-song-id="${song.id}" oninput="this.nextElementSibling.textContent = this.value" ${!currentUser ? 'disabled' : ''}>
                 <span class="rating-value">4</span>
             </div>
             <label class="rating-label">Optional Review:</label>
-            <textarea class="review-textarea" placeholder="Share your thoughts about this song..." data-song-id="${song.id}"></textarea>
-            <button class="submit-btn" onclick="submitRating(${song.id})"><i class="fas fa-star"></i> Submit Rating</button>
+            <textarea class="review-textarea" placeholder="Share your thoughts about this song..." data-song-id="${song.id}" ${!currentUser ? 'disabled' : ''}></textarea>
+            <button class="submit-btn" onclick="submitRating(${song.id})" ${!currentUser ? 'disabled' : ''}><i class="fas fa-star"></i> Submit Rating</button>
             <div class="success-message" id="success-${song.id}"></div>
             <div class="error-message" id="error-${song.id}"></div>
             <div class="user-rating-info" id="user-rating-${song.id}"></div>
+            <div class="stats" style="margin-top:10px;color:#bdbdbd;font-size:0.95rem;"><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</div>
         </div>
     `;
     checkUserRating(song.id);
