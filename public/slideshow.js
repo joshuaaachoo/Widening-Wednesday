@@ -39,22 +39,30 @@ function renderAuthUI() {
 async function loadSongs() {
     try {
         const response = await fetch('/api/songs');
-        songs = await response.json();
-        
-        if (songs.length === 0) {
-            document.getElementById('songsGrid').innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: white;">
-                    <i class="fas fa-music" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.7;"></i>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 10px;">No songs to rate yet</h3>
-                    <p style="font-size: 1.1rem; opacity: 0.8;">Check back on Wednesday when new songs are shared!</p>
-                </div>
-            `;
+        const newSongs = await response.json();
+        if (!Array.isArray(newSongs) || newSongs.length === 0) {
+            songs = [];
+            textures = [];
+            render();
             return [];
         }
-        
+        // If song list changed, reload textures
+        let changed = songs.length !== newSongs.length || songs.some((s, i) => s.id !== newSongs[i].id);
+        songs = newSongs;
+        if (changed) {
+            textures = [];
+            loadTextures().then(() => {
+                render();
+            });
+        } else {
+            render();
+        }
         return songs;
     } catch (error) {
         console.error('Error loading songs:', error);
+        songs = [];
+        textures = [];
+        render();
         return [];
     }
 }
@@ -268,7 +276,7 @@ function animate() {
 
 async function loadTextures() {
     const loader = new THREE.TextureLoader();
-    
+    textures = [];
     for (const song of songs) {
         if (song.image_url) {
             try {
@@ -281,13 +289,26 @@ async function loadTextures() {
                 textures.push(texture);
             } catch (error) {
                 console.error('Error loading texture:', error);
+                textures.push(createFallbackTexture());
             }
+        } else {
+            textures.push(createFallbackTexture());
         }
     }
-
     if (textures.length >= 2) {
         shaderMaterial.uniforms.uTexture1.value = textures[0];
         shaderMaterial.uniforms.uTexture2.value = textures[1];
+    }
+
+    function createFallbackTexture() {
+        // Create a simple gray fallback texture
+        const size = 32;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#444';
+        ctx.fillRect(0, 0, size, size);
+        return new THREE.CanvasTexture(canvas);
     }
 }
 
@@ -357,9 +378,15 @@ function updateNavigation() {
 }
 
 function render() {
-    // Render song info overlay for the current slide
+    // Always update navigation and counter
+    updateCounter();
+    updateNavigation();
     const info = document.getElementById('slideInfo');
-    if (!songs.length || !info) return;
+    if (!info) return;
+    if (!songs.length) {
+        info.innerHTML = '';
+        return;
+    }
     const song = songs[currentSlideIndex];
     let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
     let ratingCount = song.rating_count || 0;
