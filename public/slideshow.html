@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widening Wednesday - Slideshow</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* Slideshow View */
+        .slideshow-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            pointer-events: all;
+        }
+
+        .slideshow-view.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .webgl-canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+            cursor: pointer;
+        }
+
+        .slideshow-ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 50%;
+            left: 30px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .slide-total {
+            position: fixed;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-instructions {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .slides-navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            gap: 0;
+            pointer-events: all;
+        }
+
+        .slide-nav-item {
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 15px;
+            flex: 1;
+            border: none;
+            background: none;
+            transition: all 0.3s ease;
+        }
+
+        .slide-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .slide-progress-line {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            margin-bottom: 8px;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .slide-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #1DB954;
+            transition: width 0.1s ease, opacity 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .slide-nav-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .slide-nav-item.active .slide-nav-title {
+            color: #fff;
+        }
+
+        /* Catalog View */
+        .catalog-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            padding: 100px 20px 40px;
+        }
+
+        .catalog-view.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .catalog-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .catalog-header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .catalog-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .user-auth {
+            margin-top: 20px;
+        }
+
+        .auth-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(29, 185, 84, 0.9);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .auth-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .logout-link {
+            background: rgba(231, 76, 60, 0.9);
+            margin-left: 10px;
+        }
+
+        .songs-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .song-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .song-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .song-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1DB954, #1ed760);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .song-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .song-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin-right: 15px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .song-details h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .song-details h3 a {
+            color: #1DB954;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .song-details h3 a:hover {
+            color: #1ed760;
+            text-decoration: underline;
+        }
+
+        .song-details p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .rating-section {
+            margin-bottom: 20px;
+        }
+
+        .rating-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .rating-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rating-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .rating-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .rating-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1DB954;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .review-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s ease;
+        }
+
+        .review-textarea:focus {
+            outline: none;
+            border-color: #1DB954;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1DB954, #1ed760);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .success-message, .error-message {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .user-rating-info {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #c8e6c9;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .login-prompt {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .view-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            pointer-events: all;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 50px;
+            display: flex;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .view-toggle button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .view-toggle button.active {
+            background: rgba(29, 185, 84, 0.9);
+            color: white;
+        }
+
+        .view-toggle button:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .songs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .catalog-view {
+                padding: 80px 10px 20px;
+            }
+
+            .catalog-header h1 {
+                font-size: 2rem;
+            }
+
+            .slide-counter, .slide-total {
+                font-size: 10px;
+            }
+
+            .slides-navigation {
+                bottom: 20px;
+                left: 20px;
+                right: 20px;
+            }
+
+            .slide-nav-item {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="view-toggle">
+        <button id="btnSlideshow" class="active" onclick="switchView('slideshow')">
+            <i class="fas fa-play"></i> Slideshow
+        </button>
+        <button id="btnCatalog" onclick="switchView('catalog')">
+            <i class="fas fa-th"></i> Catalog
+        </button>
+    </div>
+
+    <div class="slideshow-view" id="slideshowView">
+        <canvas class="webgl-canvas"></canvas>
+        <div class="slideshow-ui">
+            <div class="nav-instructions">Click/Space: Next • ← → : Navigate</div>
+            <span class="slide-counter" id="slideCounter">01</span>
+            <span class="slide-total" id="slideTotal">00</span>
+            <nav class="slides-navigation" id="slidesNav"></nav>
+        </div>
+    </div>
+
+    <div class="catalog-view" id="catalogView">
+        <div class="catalog-header">
+            <h1>Widening Wednesday</h1>
+            <p>Rate the songs shared every Wednesday!</p>
+            <div class="user-auth" id="userAuth">
+                <div class="loading"><i class="fas fa-spinner"></i></div>
+            </div>
+        </div>
+        <div class="songs-grid" id="songsGrid"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/slideshow.js"></script>
+</body>
+</html>

@@ -50,6 +50,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1200px;
+            user-select: none;
         }
 
         .slideshow-arrow {
@@ -77,11 +79,25 @@
         .slideshow-arrow.right {
             right: -60px;
         }
-        .slideshow-card {
+        .slideshow-cards {
             width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slideshow-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 0.6s cubic-bezier(.25,.8,.25,1), opacity 0.6s cubic-bezier(.25,.8,.25,1), z-index 0s;
+            will-change: transform, opacity;
         }
 
         .song-card {
@@ -388,7 +404,7 @@
 
         <div id="slideshow" class="slideshow-container" style="display: none;">
             <button class="slideshow-arrow left" id="arrow-left" aria-label="Previous song" style="display:none;"><i class="fas fa-chevron-left"></i></button>
-            <div class="slideshow-card" id="slideshow-card"></div>
+            <div class="slideshow-cards" id="slideshow-cards"></div>
             <button class="slideshow-arrow right" id="arrow-right" aria-label="Next song" style="display:none;"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
@@ -451,7 +467,7 @@
                 const loadingEl = document.getElementById('loading');
                 const emptyStateEl = document.getElementById('empty-state');
                 const slideshowEl = document.getElementById('slideshow');
-                const cardEl = document.getElementById('slideshow-card');
+                const cardsEl = document.getElementById('slideshow-cards');
                 const arrowLeft = document.getElementById('arrow-left');
                 const arrowRight = document.getElementById('arrow-right');
 
@@ -474,10 +490,34 @@
                 arrowLeft.style.display = this.songs.length > 1 ? 'block' : 'none';
                 arrowRight.style.display = this.songs.length > 1 ? 'block' : 'none';
 
-                // Render current card
-                const song = this.songs[this.currentIndex];
-                cardEl.innerHTML = this.createSongCard(song);
-                await this.checkUserRating(song.id);
+                // Render all cards for 3D stacking
+                cardsEl.innerHTML = '';
+                const maxStack = 2; // how many cards to show on each side
+                for (let i = 0; i < this.songs.length; i++) {
+                    const song = this.songs[i];
+                    const card = document.createElement('div');
+                    card.className = 'slideshow-card';
+                    card.innerHTML = this.createSongCard(song);
+                    // Calculate position relative to currentIndex
+                    let offset = i - this.currentIndex;
+                    if (offset < -Math.floor(this.songs.length / 2)) offset += this.songs.length;
+                    if (offset > Math.floor(this.songs.length / 2)) offset -= this.songs.length;
+                    // 3D transform
+                    let z = -Math.abs(offset);
+                    let scale = 1 - Math.abs(offset) * 0.12;
+                    let rotateY = offset * 18;
+                    let translateX = offset * 60;
+                    let opacity = Math.abs(offset) > maxStack ? 0 : 1 - Math.abs(offset) * 0.25;
+                    card.style.transform = `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`;
+                    card.style.zIndex = 100 - Math.abs(offset);
+                    card.style.opacity = opacity;
+                    card.style.pointerEvents = offset === 0 ? 'auto' : 'none';
+                    if (offset === 0) {
+                        // Only check user rating for the center card
+                        this.checkUserRating(song.id);
+                    }
+                    cardsEl.appendChild(card);
+                }
 
                 // Arrow event listeners
                 arrowLeft.onclick = () => {
@@ -488,6 +528,18 @@
                     this.currentIndex = (this.currentIndex + 1) % this.songs.length;
                     this.renderSongs();
                 };
+
+                // Keyboard navigation
+                if (!this._keyboardHandler) {
+                    this._keyboardHandler = (e) => {
+                        if (e.key === 'ArrowLeft') {
+                            arrowLeft.click();
+                        } else if (e.key === 'ArrowRight') {
+                            arrowRight.click();
+                        }
+                    };
+                    window.addEventListener('keydown', this._keyboardHandler);
+                }
             }
 
             createSongCard(song) {
