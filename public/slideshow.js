@@ -412,40 +412,53 @@ function updateNavigation() {
 }
 
 function render() {
-    // Always update navigation and counter
     updateCounter();
     updateNavigation();
-    const info = document.getElementById('slideInfo');
-    if (!info) return;
-    if (!songs.length) {
-        info.innerHTML = '';
-        return;
-    }
+    // Remove any existing overlay
+    let overlay = document.getElementById('slideInfoOverlay');
+    if (overlay) overlay.remove();
+    if (!songs.length) return;
     const song = songs[currentSlideIndex];
     let loginMsg = !currentUser ? '<div style="color:#e74c3c;font-weight:bold;margin-bottom:10px;">Login with Discord to rate!</div>' : '';
     let ratingCount = song.rating_count || 0;
-    info.innerHTML = `
-        <div class="slide-song-title">${song.title || 'Unknown Title'}</div>
-        <div class="slide-song-artist">${song.artist || 'Unknown Artist'}</div>
-        <div class="slide-song-actions">
-            <a href="${song.spotify_url}" target="_blank" class="slide-song-link"><i class="fab fa-spotify"></i> Open in Spotify</a>
+    overlay = document.createElement('div');
+    overlay.id = 'slideInfoOverlay';
+    overlay.style.position = 'fixed';
+    overlay.style.left = '50%';
+    overlay.style.top = '60%';
+    overlay.style.transform = 'translate(-50%, -50%)';
+    overlay.style.background = 'rgba(0,0,0,0.72)';
+    overlay.style.borderRadius = '18px';
+    overlay.style.padding = '32px 36px 28px 36px';
+    overlay.style.minWidth = '340px';
+    overlay.style.maxWidth = '90vw';
+    overlay.style.color = '#fff';
+    overlay.style.boxShadow = '0 8px 32px 0 rgba(31,38,135,0.37)';
+    overlay.style.zIndex = '20';
+    overlay.style.display = currentView === 'slideshow' ? 'block' : 'none';
+    overlay.innerHTML = `
+        <div style="text-align:center;">
+            <div style="font-size:2rem;font-weight:700;margin-bottom:6px;">${song.title || 'Unknown Title'}</div>
+            <div style="font-size:1.1rem;color:#bdbdbd;margin-bottom:10px;">${song.artist || 'Unknown Artist'}</div>
+            <a href="${song.spotify_url}" target="_blank" style="color:#1DB954;font-weight:600;text-decoration:none;font-size:1.1rem;"><i class="fab fa-spotify"></i> Open in Spotify</a>
         </div>
-        <div class="slide-song-rating">
+        <div style="margin-top:22px;">
             ${loginMsg}
-            <label class="rating-label">Rate this song (1-7):</label>
-            <div class="rating-input">
+            <label class="rating-label" style="color:#fff;">Rate this song (1-7):</label>
+            <div class="rating-input" style="margin-bottom:10px;">
                 <input type="range" class="rating-slider" min="1" max="7" value="4" data-song-id="${song.id}" oninput="this.nextElementSibling.textContent = this.value" ${!currentUser ? 'disabled' : ''}>
                 <span class="rating-value">4</span>
             </div>
-            <label class="rating-label">Optional Review:</label>
-            <textarea class="review-textarea" placeholder="Share your thoughts about this song..." data-song-id="${song.id}" ${!currentUser ? 'disabled' : ''}></textarea>
-            <button class="submit-btn" onclick="submitRating(${song.id})" ${!currentUser ? 'disabled' : ''}><i class="fas fa-star"></i> Submit Rating</button>
+            <label class="rating-label" style="color:#fff;">Optional Review:</label>
+            <textarea class="review-textarea" placeholder="Share your thoughts about this song..." data-song-id="${song.id}" style="margin-bottom:10px;" ${!currentUser ? 'disabled' : ''}></textarea>
+            <button class="submit-btn" onclick="submitRating(${song.id})" style="margin-bottom:10px;" ${!currentUser ? 'disabled' : ''}><i class="fas fa-star"></i> Submit Rating</button>
             <div class="success-message" id="success-${song.id}"></div>
             <div class="error-message" id="error-${song.id}"></div>
             <div class="user-rating-info" id="user-rating-${song.id}"></div>
             <div class="stats" style="margin-top:10px;color:#bdbdbd;font-size:0.95rem;"><i class="fas fa-users"></i> ${ratingCount} rating${ratingCount !== 1 ? 's' : ''}</div>
         </div>
     `;
+    document.body.appendChild(overlay);
     checkUserRating(song.id);
 }
 

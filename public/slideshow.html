@@ -14,449 +14,216 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
+            background: #1a1a1a;
             color: #fff;
             overflow: hidden;
         }
 
-        /* Slideshow View */
-        .slideshow-view {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-            pointer-events: all;
-        }
-
-        .slideshow-view.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .webgl-canvas {
-            display: block;
-            width: 100%;
-            height: 100vh;
-            cursor: pointer;
-        }
-
-        .slideshow-ui {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .slide-counter {
-            position: fixed;
-            top: 50%;
-            left: 30px;
-            transform: translateY(-50%);
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .slide-total {
-            position: fixed;
-            top: 50%;
-            right: 30px;
-            transform: translateY(-50%);
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .nav-instructions {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 11px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
-
-        .slides-navigation {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            right: 30px;
-            display: flex;
-            gap: 0;
-            pointer-events: all;
-        }
-
-        .slide-nav-item {
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            padding: 15px;
-            flex: 1;
-            border: none;
-            background: none;
-            transition: all 0.3s ease;
-        }
-
-        .slide-nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .slide-progress-line {
-            width: 100%;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.2);
-            margin-bottom: 8px;
-            border-radius: 1px;
-            overflow: hidden;
-        }
-
-        .slide-progress-fill {
-            height: 100%;
-            width: 0%;
-            background: #1DB954;
-            transition: width 0.1s ease, opacity 0.3s ease;
-            border-radius: 1px;
-        }
-
-        .slide-nav-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .slide-nav-item.active .slide-nav-title {
-            color: #fff;
-        }
-
-        /* Catalog View */
-        .catalog-view {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            z-index: 2;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
-            padding: 100px 20px 40px;
-        }
-
-        .catalog-view.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .catalog-header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
-
-        .catalog-header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .catalog-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .user-auth {
-            margin-top: 20px;
-        }
-
-        .auth-link {
-            display: inline-block;
-            padding: 10px 20px;
-            background: rgba(29, 185, 84, 0.9);
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: transform 0.2s ease;
-        }
-
-        .auth-link:hover {
-            transform: translateY(-2px);
-        }
-
-        .logout-link {
-            background: rgba(231, 76, 60, 0.9);
-            margin-left: 10px;
-        }
-
-        .songs-grid {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-        }
-
-        .song-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            color: #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
+        .slideshow-container {
             position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .song-card:hover {
-            transform: translateY(-5px);
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .song-card::before {
-            content: '';
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-background {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #1DB954, #1ed760);
-            border-radius: 20px 20px 0 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.4);
+            transform: scale(1.1);
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            padding: 40px;
+            max-width: 1200px;
+        }
+
+        .album-art {
+            flex-shrink: 0;
+        }
+
+        .album-art img {
+            width: 400px;
+            height: 400px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            object-fit: cover;
         }
 
         .song-info {
+            flex: 1;
             display: flex;
-            align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 30px;
         }
 
-        .song-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            margin-right: 15px;
-            object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .song-title {
+            font-size: 4rem;
+            font-weight: bold;
+            line-height: 1.2;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
-        .song-details h3 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-        }
-
-        .song-details h3 a {
+        .song-artist {
+            font-size: 2.5rem;
             color: #1DB954;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .song-details h3 a:hover {
-            color: #1ed760;
-            text-decoration: underline;
-        }
-
-        .song-details p {
-            color: #666;
-            font-size: 1rem;
-        }
-
-        .rating-section {
-            margin-bottom: 20px;
-        }
-
-        .rating-label {
-            display: block;
-            margin-bottom: 10px;
             font-weight: 600;
-            font-size: 0.9rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
-        .rating-input {
+        .song-meta {
+            display: flex;
+            gap: 40px;
+            font-size: 1.3rem;
+            color: #ccc;
+        }
+
+        .meta-item {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .rating-slider {
-            flex: 1;
-            height: 8px;
-            border-radius: 4px;
-            background: #ddd;
-            outline: none;
-            -webkit-appearance: none;
+        .rating-display {
+            margin-top: 20px;
         }
 
-        .rating-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #1DB954;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        .rating-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .rating-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #1DB954;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .rating-value {
-            font-weight: bold;
+        .rating-label {
             font-size: 1.2rem;
-            color: #1DB954;
-            min-width: 30px;
-            text-align: center;
+            min-width: 80px;
+            color: #aaa;
         }
 
-        .review-textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            resize: vertical;
-            min-height: 80px;
-            transition: border-color 0.3s ease;
-        }
-
-        .review-textarea:focus {
-            outline: none;
-            border-color: #1DB954;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #1DB954, #1ed760);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
-        }
-
-        .submit-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .success-message, .error-message {
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .user-rating-info {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 1px solid #c8e6c9;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        .login-prompt {
-            color: #e74c3c;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .view-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            pointer-events: all;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 8px;
-            border-radius: 50px;
-            display: flex;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .view-toggle button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            background: transparent;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .view-toggle button.active {
-            background: rgba(29, 185, 84, 0.9);
-            color: white;
-        }
-
-        .view-toggle button:hover:not(.active) {
+        .bar-container {
+            flex: 1;
+            height: 30px;
             background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1DB954, #1ed760);
+            border-radius: 15px;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .avg-rating {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1DB954;
+            text-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+            margin-top: 20px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(29, 185, 84, 0.9);
+            border: none;
             color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: #1DB954;
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #1DB954;
+            transition: width 0.1s linear;
+            z-index: 100;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 100;
         }
 
         .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
-            padding: 40px;
-            color: white;
+            z-index: 200;
         }
 
         .loading i {
-            font-size: 2rem;
+            font-size: 4rem;
             animation: spin 1s linear infinite;
         }
 
@@ -465,67 +232,269 @@
             to { transform: rotate(360deg); }
         }
 
-        @media (max-width: 768px) {
-            .songs-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .catalog-view {
-                padding: 80px 10px 20px;
+        @media (max-width: 1024px) {
+            .slide-content {
+                flex-direction: column;
+                gap: 30px;
             }
 
-            .catalog-header h1 {
-                font-size: 2rem;
+            .album-art img {
+                width: 300px;
+                height: 300px;
             }
 
-            .slide-counter, .slide-total {
-                font-size: 10px;
+            .song-title {
+                font-size: 2.5rem;
             }
 
-            .slides-navigation {
-                bottom: 20px;
-                left: 20px;
-                right: 20px;
+            .song-artist {
+                font-size: 1.8rem;
             }
 
-            .slide-nav-item {
-                padding: 10px;
+            .song-meta {
+                font-size: 1rem;
+                gap: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="view-toggle">
-        <button id="btnSlideshow" class="active" onclick="switchView('slideshow')">
-            <i class="fas fa-play"></i> Slideshow
+    <div class="loading" id="loading">
+        <i class="fas fa-spinner"></i>
+        <p>Loading songs...</p>
+    </div>
+
+    <div class="slideshow-container" id="slideshow" style="display: none;">
+        <!-- Slides will be populated here -->
+    </div>
+
+    <div class="controls" id="controls" style="display: none;">
+        <button class="control-btn" onclick="slideshow.previousSlide()">
+            <i class="fas fa-backward"></i>
         </button>
-        <button id="btnCatalog" onclick="switchView('catalog')">
-            <i class="fas fa-th"></i> Catalog
+        <button class="control-btn" id="playPauseBtn" onclick="slideshow.togglePlayPause()">
+            <i class="fas fa-pause"></i>
+        </button>
+        <button class="control-btn" onclick="slideshow.nextSlide()">
+            <i class="fas fa-forward"></i>
         </button>
     </div>
 
-    <div class="slideshow-view" id="slideshowView">
-        <canvas class="webgl-canvas"></canvas>
-        <div class="slideshow-ui">
-            <div class="nav-instructions">Click/Space: Next • ← → : Navigate</div>
-            <span class="slide-counter" id="slideCounter">01</span>
-            <span class="slide-total" id="slideTotal">00</span>
-            <nav class="slides-navigation" id="slidesNav"></nav>
-        </div>
-    </div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-counter" id="slideCounter" style="display: none;"></div>
 
-    <div class="catalog-view" id="catalogView">
-        <div class="catalog-header">
-            <h1>Widening Wednesday</h1>
-            <p>Rate the songs shared every Wednesday!</p>
-            <div class="user-auth" id="userAuth">
-                <div class="loading"><i class="fas fa-spinner"></i></div>
-            </div>
-        </div>
-        <div class="songs-grid" id="songsGrid"></div>
-    </div>
+    <script>
+        class Slideshow {
+            constructor() {
+                this.songs = [];
+                this.currentIndex = 0;
+                this.isPlaying = true;
+                this.intervalDuration = 8000; // 8 seconds per slide
+                this.interval = null;
+                this.progressInterval = null;
+                this.init();
+            }
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="/slideshow.js"></script>
+            async init() {
+                await this.loadSongs();
+                if (this.songs.length > 0) {
+                    this.renderSlides();
+                    this.showSlide(0);
+                    this.startAutoPlay();
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('slideshow').style.display = 'flex';
+                    document.getElementById('controls').style.display = 'flex';
+                    document.getElementById('slideCounter').style.display = 'block';
+                } else {
+                    document.getElementById('loading').innerHTML = '<i class="fas fa-music"></i><p>No songs available for slideshow</p>';
+                }
+            }
+
+            async loadSongs() {
+                try {
+                    const response = await fetch('/api/songs');
+                    const songs = await response.json();
+                    
+                    // Load ratings for each song
+                    for (const song of songs) {
+                        const ratingsResponse = await fetch(`/api/songs/${song.id}/ratings`);
+                        const ratings = await ratingsResponse.json();
+                        song.ratings = ratings;
+                        
+                        // Calculate rating distribution
+                        song.ratingDistribution = this.calculateRatingDistribution(ratings);
+                        song.averageRating = ratings.length > 0 
+                            ? (ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1)
+                            : 'N/A';
+                    }
+                    
+                    this.songs = songs.filter(s => s.ratings && s.ratings.length > 0);
+                } catch (error) {
+                    console.error('Error loading songs:', error);
+                }
+            }
+
+            calculateRatingDistribution(ratings) {
+                const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+                ratings.forEach(r => {
+                    if (r.rating >= 1 && r.rating <= 7) {
+                        distribution[r.rating]++;
+                    }
+                });
+                
+                const maxCount = Math.max(...Object.values(distribution));
+                const percentages = {};
+                for (let i = 1; i <= 7; i++) {
+                    percentages[i] = maxCount > 0 ? (distribution[i] / maxCount) * 100 : 0;
+                }
+                
+                return { counts: distribution, percentages };
+            }
+
+            renderSlides() {
+                const container = document.getElementById('slideshow');
+                container.innerHTML = this.songs.map((song, index) => {
+                    const imageUrl = song.image_url || 'https://via.placeholder.com/400?text=No+Image';
+                    
+                    return `
+                        <div class="slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <div class="slide-background" style="background-image: url('${imageUrl}')"></div>
+                            <div class="slide-content">
+                                <div class="album-art">
+                                    <img src="${imageUrl}" alt="${song.title}">
+                                </div>
+                                <div class="song-info">
+                                    <div class="song-title">${song.title || 'Unknown Title'}</div>
+                                    <div class="song-artist">${song.artist || 'Unknown Artist'}</div>
+                                    <div class="song-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-user"></i>
+                                            <span>${song.added_by || 'Unknown'}</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-users"></i>
+                                            <span>${song.ratings.length} rating${song.ratings.length !== 1 ? 's' : ''}</span>
+                                        </div>
+                                    </div>
+                                    <div class="rating-display">
+                                        <div class="rating-bars">
+                                            ${[7, 6, 5, 4, 3, 2, 1].map(rating => `
+                                                <div class="rating-bar">
+                                                    <div class="rating-label">${rating} ⭐</div>
+                                                    <div class="bar-container">
+                                                        <div class="bar-fill" style="width: ${song.ratingDistribution.percentages[rating]}%">
+                                                            ${song.ratingDistribution.counts[rating] > 0 ? song.ratingDistribution.counts[rating] : ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <div class="avg-rating">
+                                            Average: ${song.averageRating}/7
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            showSlide(index) {
+                const slides = document.querySelectorAll('.slide');
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                
+                this.currentIndex = index;
+                this.updateCounter();
+                this.resetProgress();
+            }
+
+            nextSlide() {
+                const nextIndex = (this.currentIndex + 1) % this.songs.length;
+                this.showSlide(nextIndex);
+            }
+
+            previousSlide() {
+                const prevIndex = (this.currentIndex - 1 + this.songs.length) % this.songs.length;
+                this.showSlide(prevIndex);
+            }
+
+            togglePlayPause() {
+                this.isPlaying = !this.isPlaying;
+                const btn = document.getElementById('playPauseBtn');
+                
+                if (this.isPlaying) {
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    this.startAutoPlay();
+                } else {
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                    this.stopAutoPlay();
+                }
+            }
+
+            startAutoPlay() {
+                this.stopAutoPlay();
+                this.interval = setInterval(() => this.nextSlide(), this.intervalDuration);
+                this.startProgress();
+            }
+
+            stopAutoPlay() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = null;
+                }
+                this.stopProgress();
+            }
+
+            startProgress() {
+                this.stopProgress();
+                const progressBar = document.getElementById('progressBar');
+                let progress = 0;
+                const step = 100 / (this.intervalDuration / 100);
+                
+                this.progressInterval = setInterval(() => {
+                    progress += step;
+                    if (progress >= 100) {
+                        progress = 0;
+                    }
+                    progressBar.style.width = progress + '%';
+                }, 100);
+            }
+
+            stopProgress() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
+            }
+
+            resetProgress() {
+                document.getElementById('progressBar').style.width = '0%';
+                if (this.isPlaying) {
+                    this.startProgress();
+                }
+            }
+
+            updateCounter() {
+                document.getElementById('slideCounter').textContent = 
+                    `${this.currentIndex + 1} / ${this.songs.length}`;
+            }
+        }
+
+        // Initialize slideshow
+        const slideshow = new Slideshow();
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') slideshow.previousSlide();
+            if (e.key === 'ArrowRight') slideshow.nextSlide();
+            if (e.key === ' ') {
+                e.preventDefault();
+                slideshow.togglePlayPause();
+            }
+        });
+    </script>
 </body>
 </html>
