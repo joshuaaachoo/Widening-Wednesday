@@ -269,5 +269,12 @@ process.on('SIGINT', () => {
     db.close();
     process.exit(0);
 });
+app.get('/slideshow', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'slideshow.html'));
+});
 
+// Keep the existing / route below this
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 module.exports = app;
