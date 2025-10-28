@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widening Wednesday</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+
+        .webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 60px 40px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .content-overlay > * {
+            pointer-events: auto;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.8);
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            text-shadow: 1px 1px 10px rgba(0,0,0,0.8);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            padding: 15px 35px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .cta-primary {
+            background: linear-gradient(135deg, #1DB954, #1ed760);
+            color: white;
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(29, 185, 84, 0.5);
+        }
+
+        .cta-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .album-info {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 15px;
+            max-width: 350px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .album-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: #1DB954;
+        }
+
+        .album-info p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .album-info .added-by {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+            color: #1DB954;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .fallback-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 0;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+
+            .content-overlay {
+                padding: 40px 20px;
+            }
+
+            .album-info {
+                top: 20px;
+                right: 20px;
+                left: 20px;
+                max-width: none;
+                padding: 15px 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .cta-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas class="webgl-canvas"></canvas>
+    <div class="fallback-background" id="fallback" style="display: none;"></div>
+    
+    <div class="loading" id="loading">
+        <i class="fas fa-spinner"></i>
+    </div>
+
+    <div class="content-overlay">
+        <h1 class="logo">Widening Wednesday</h1>
+        <p class="tagline">Discover and rate songs shared every Wednesday</p>
+        <div class="cta-buttons">
+            <a href="/rate.html" class="cta-button cta-primary">
+                <i class="fas fa-star"></i> Rate Songs
+            </a>
+            <a href="/admin" class="cta-button cta-secondary">
+                <i class="fas fa-plus"></i> Add Song
+            </a>
+        </div>
+    </div>
+
+    <div class="album-info" id="albumInfo">
+        <h3 id="albumTitle">Loading...</h3>
+        <p id="albumArtist">Artist</p>
+        <p id="albumAlbum">Album</p>
+        <p class="added-by" id="albumAddedBy">Added by</p>
+    </div>
+
+    <script type="module">
+        import * as THREE from "https://esm.sh/three";
+
+        let currentSlideIndex = 0;
+        let isTransitioning = false;
+        let shaderMaterial, renderer, scene, camera;
+        let slideTextures = [];
+        let albums = [];
+        let autoSlideTimer = null;
+
+        const TRANSITION_DURATION = 2.5;
+        const AUTO_SLIDE_INTERVAL = 5000;
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform sampler2D uTexture1;
+            uniform sampler2D uTexture2;
+            uniform float uProgress;
+            uniform vec2 uResolution;
+            uniform vec2 uTexture1Size;
+            uniform vec2 uTexture2Size;
+            
+            varying vec2 vUv;
+
+            vec2 getCoverUV(vec2 uv, vec2 textureSize) {
+                vec2 s = uResolution / textureSize;
+                float scale = max(s.x, s.y);
+                vec2 scaledSize = textureSize * scale;
+                vec2 offset = (uResolution - scaledSize) * 0.5;
+                return (uv * uResolution - offset) / scaledSize;
+            }
+
+            float noise(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            }
+
+            float smoothNoise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+                
+                return mix(
+                    mix(noise(i), noise(i + vec2(1.0, 0.0)), f.x),
+                    mix(noise(i + vec2(0.0, 1.0)), noise(i + vec2(1.0, 1.0)), f.x),
+                    f.y
+                );
+            }
+
+            vec4 glassEffect(vec2 uv, float progress) {
+                float glassStrength = 0.08;
+                float chromaticAberration = 0.02;
+                
+                vec2 center = vec2(0.5, 0.5);
+                vec2 p = uv * uResolution;
+                
+                vec2 uv1 = getCoverUV(uv, uTexture1Size);
+                vec2 uv2_base = getCoverUV(uv, uTexture2Size);
+                
+                float maxRadius = length(uResolution) * 0.85;
+                float bubbleRadius = progress * maxRadius;
+                vec2 sphereCenter = center * uResolution;
+                
+                float dist = length(p - sphereCenter);
+                float normalizedDist = dist / max(bubbleRadius, 0.001);
+                vec2 direction = (dist > 0.0) ? (p - sphereCenter) / dist : vec2(0.0);
+                float inside = smoothstep(bubbleRadius + 3.0, bubbleRadius - 3.0, dist);
+                
+                float distanceFactor = smoothstep(0.3, 1.0, normalizedDist);
+                float time = progress * 5.0;
+                
+                vec2 distortedUV = uv2_base;
+                if (inside > 0.0) {
+                    float refractionOffset = glassStrength * pow(distanceFactor, 1.5);
+                    vec2 flowDirection = normalize(direction + vec2(sin(time), cos(time * 0.7)) * 0.3);
+                    distortedUV -= flowDirection * refractionOffset;
+
+                    float wave = sin(normalizedDist * 22.0 - time * 3.5);
+                    float waveOffset = wave * 0.025 * distanceFactor;
+                    distortedUV -= direction * waveOffset;
+                }
+
+                vec4 newImg;
+                if (inside > 0.0) {
+                    float aberrationOffset = chromaticAberration * pow(distanceFactor, 1.2);
+                    
+                    vec2 uv_r = distortedUV + direction * aberrationOffset * 1.2;
+                    vec2 uv_g = distortedUV + direction * aberrationOffset * 0.2;
+                    vec2 uv_b = distortedUV - direction * aberrationOffset * 0.8;
+
+                    float r = texture2D(uTexture2, uv_r).r;
+                    float g = texture2D(uTexture2, uv_g).g;
+                    float b = texture2D(uTexture2, uv_b).b;
+                    newImg = vec4(r, g, b, 1.0);
+                } else {
+                    newImg = texture2D(uTexture2, uv2_base);
+                }
+                
+                vec4 currentImg = texture2D(uTexture1, uv1);
+                
+                if (progress > 0.95) {
+                    vec4 pureNewImg = texture2D(uTexture2, uv2_base);
+                    float endTransition = (progress - 0.95) / 0.05;
+                    newImg = mix(newImg, pureNewImg, endTransition);
+                }
+                
+                return mix(currentImg, newImg, inside);
+            }
+
+            void main() {
+                gl_FragColor = glassEffect(vUv, uProgress);
+            }
+        `;
+
+        async function loadAlbums() {
+            try {
+                const response = await fetch('/api/songs');
+                const songs = await response.json();
+                
+                albums = songs.filter(song => song.image_url);
+                
+                if (albums.length === 0) {
+                    document.getElementById('fallback').style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                    updateAlbumInfo({
+                        title: 'No songs yet',
+                        artist: 'Share some songs to get started!',
+                        album: '',
+                        added_by: ''
+                    });
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading albums:', error);
+                document.getElementById('fallback').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+                return false;
+            }
+        }
+
+        async function loadImageTexture(src) {
+            return new Promise((resolve, reject) => {
+                const loader = new THREE.TextureLoader();
+                const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                
+                loader.load(
+                    src,
+                    (texture) => {
+                        clearTimeout(timeout);
+                        texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                        texture.userData = {
+                            size: new THREE.Vector2(texture.image.width, texture.image.height)
+                        };
+                        resolve(texture);
+                    },
+                    undefined,
+                    (error) => {
+                        clearTimeout(timeout);
+                        reject(error);
+                    }
+                );
+            });
+        }
+
+        async function initializeRenderer() {
+            const canvas = document.querySelector('.webgl-canvas');
+            if (!canvas) return;
+
+            scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: false,
+                alpha: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTexture1: { value: null },
+                    uTexture2: { value: null },
+                    uProgress: { value: 0.0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uTexture1Size: { value: new THREE.Vector2(1, 1) },
+                    uTexture2Size: { value: new THREE.Vector2(1, 1) }
+                },
+                vertexShader,
+                fragmentShader
+            });
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            const mesh = new THREE.Mesh(geometry, shaderMaterial);
+            scene.add(mesh);
+
+            // Load all textures
+            for (let i = 0; i < albums.length; i++) {
+                try {
+                    const texture = await loadImageTexture(albums[i].image_url);
+                    slideTextures.push(texture);
+                } catch (error) {
+                    console.warn(`Failed to load image ${i}`);
+                }
+            }
+
+            if (slideTextures.length >= 2) {
+                shaderMaterial.uniforms.uTexture1.value = slideTextures[0];
+                shaderMaterial.uniforms.uTexture2.value = slideTextures[1];
+                shaderMaterial.uniforms.uTexture1Size.value = slideTextures[0].userData.size;
+                shaderMaterial.uniforms.uTexture2Size.value = slideTextures[1].userData.size;
+                
+                updateAlbumInfo(albums[0]);
+                document.getElementById('loading').style.display = 'none';
+                
+                startAutoSlide();
+            }
+
+            const render = () => {
+                requestAnimationFrame(render);
+                renderer.render(scene, camera);
+            };
+            render();
+        }
+
+        function updateAlbumInfo(album) {
+            document.getElementById('albumTitle').textContent = album.title || 'Unknown Title';
+            document.getElementById('albumArtist').textContent = album.artist || 'Unknown Artist';
+            document.getElementById('albumAlbum').textContent = album.album || '';
+            document.getElementById('albumAddedBy').textContent = album.added_by ? `Added by ${album.added_by}` : '';
+        }
+
+        function navigateToSlide(targetIndex) {
+            if (isTransitioning || targetIndex === currentSlideIndex || !slideTextures[targetIndex]) return;
+            
+            stopAutoSlide();
+            
+            const currentTexture = slideTextures[currentSlideIndex];
+            const targetTexture = slideTextures[targetIndex];
+            
+            isTransitioning = true;
+            
+            shaderMaterial.uniforms.uTexture1.value = currentTexture;
+            shaderMaterial.uniforms.uTexture2.value = targetTexture;
+            shaderMaterial.uniforms.uTexture1Size.value = currentTexture.userData.size;
+            shaderMaterial.uniforms.uTexture2Size.value = targetTexture.userData.size;
+            
+            currentSlideIndex = targetIndex;
+            updateAlbumInfo(albums[currentSlideIndex]);
+            
+            gsap.fromTo(
+                shaderMaterial.uniforms.uProgress,
+                { value: 0 },
+                {
+                    value: 1,
+                    duration: TRANSITION_DURATION,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        shaderMaterial.uniforms.uProgress.value = 0;
+                        shaderMaterial.uniforms.uTexture1.value = targetTexture;
+                        shaderMaterial.uniforms.uTexture1Size.value = targetTexture.userData.size;
+                        isTransitioning = false;
+                        startAutoSlide();
+                    }
+                }
+            );
+        }
+
+        function startAutoSlide() {
+            stopAutoSlide();
+            autoSlideTimer = setTimeout(() => {
+                const nextIndex = (currentSlideIndex + 1) % albums.length;
+                navigateToSlide(nextIndex);
+            }, AUTO_SLIDE_INTERVAL);
+        }
+
+        function stopAutoSlide() {
+            if (autoSlideTimer) {
+                clearTimeout(autoSlideTimer);
+                autoSlideTimer = null;
+            }
+        }
+
+        // Click to advance
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.content-overlay')) return;
+            if (!isTransitioning && slideTextures.length > 0) {
+                const nextIndex = (currentSlideIndex + 1) % albums.length;
+                navigateToSlide(nextIndex);
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowRight' || e.code === 'Space') {
+                e.preventDefault();
+                if (!isTransitioning && slideTextures.length > 0) {
+                    const nextIndex = (currentSlideIndex + 1) % albums.length;
+                    navigateToSlide(nextIndex);
+                }
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                if (!isTransitioning && slideTextures.length > 0) {
+                    const prevIndex = (currentSlideIndex - 1 + albums.length) % albums.length;
+                    navigateToSlide(prevIndex);
+                }
+            }
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (renderer && shaderMaterial) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                shaderMaterial.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+            }
+        });
+
+        // Touch support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (Math.abs(touchEndX - touchStartX) < 50) return;
+            
+            if (touchEndX < touchStartX && !isTransitioning) {
+                const nextIndex = (currentSlideIndex + 1) % albums.length;
+                navigateToSlide(nextIndex);
+            } else if (touchEndX > touchStartX && !isTransitioning) {
+                const prevIndex = (currentSlideIndex - 1 + albums.length) % albums.length;
+                navigateToSlide(prevIndex);
+            }
+        });
+
+        // Visibility change handler
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoSlide();
+            } else if (!isTransitioning && slideTextures.length > 0) {
+                startAutoSlide();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            const hasAlbums = await loadAlbums();
+            if (hasAlbums) {
+                await initializeRenderer();
+            }
+        });
+    </script>
+</body>
+</html>
